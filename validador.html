@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Validar QR · JORJVANA</title>
+
+<!-- Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- Escáner QR -->
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="bar">
+  <div class="container">
+    <div class="logo">CONCIERTO ACÚSTICO <b>JORJVANA</b></div>
+    <nav>
+      <a href="index.html">Inicio</a>
+    </nav>
+  </div>
+</header>
+
+<div class="container">
+
+  <div id="cfgWarn" class="config-warn hidden">
+    ⚠️ Configura tus credenciales de Supabase en el archivo <b>config.js</b> (variables SUPABASE_URL y SUPABASE_KEY) para activar la base de datos.
+  </div>
+
+  <!-- ===================== VALIDAR ===================== -->
+  <section id="validar" class="page active">
+    <div class="sec-hero">
+      <img src="concierto.jpg" alt="JORJVANA">
+      <div class="ov"><h1>Validación de <b>ingreso</b></h1><p>Escanea el QR de la entrada en la puerta del evento</p></div>
+    </div>
+
+    <div id="validarLogin" class="card">
+      <h2>Acceso de validador</h2>
+      <p class="muted">Esta sección es solo para personas autorizadas por el administrador. Ingresa el código de acceso que te entregaron para poder validar entradas en la puerta.</p>
+      <label>Código de acceso</label>
+      <div style="position:relative">
+        <input type="password" id="validarCodigo" placeholder="Código de acceso" style="padding-right:42px">
+        <button type="button" id="toggleValidarCodigo" onclick="togglePasswordField('validarCodigo','toggleValidarCodigo')" aria-label="Mostrar/ocultar clave"
+          style="position:absolute;right:4px;top:50%;transform:translateY(-50%);background:transparent;border:none;cursor:pointer;font-size:18px;padding:6px;line-height:1">👁️</button>
+      </div>
+      <div style="margin-top:14px"><button class="btn" onclick="loginValidador()">Ingresar</button></div>
+      <div id="msgValidarLogin"></div>
+    </div>
+
+    <div id="validarPanel" class="hidden">
+      <div class="card">
+        <div class="toolbar" style="justify-content:space-between;align-items:center;margin-bottom:0">
+          <span class="muted">Validador conectado: <b id="validadorNombre"></b></span>
+          <button class="btn sm sec" onclick="logoutValidador()">Cerrar sesión</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Validación de ingreso</h2>
+        <p class="muted">Escanea el QR de la entrada con la cámara del celular, o ingresa el código manualmente.</p>
+
+        <div class="toolbar" style="margin-top:14px">
+          <button class="btn sm green" onclick="startScan()">📷 Iniciar escáner</button>
+          <button class="btn sm sec" onclick="stopScan()">⏹ Detener</button>
+        </div>
+        <div id="reader"></div>
+
+        <label>Código manual</label>
+        <div class="pay-grid">
+          <input id="fCodigo" placeholder="JORJ-2026-XXXXXX" style="text-transform:uppercase">
+          <div style="display:flex;gap:8px">
+            <button class="btn sm blue" onclick="consultar()" style="flex:1">Consultar</button>
+            <button class="btn sm green" onclick="ingresar()" style="flex:1">Registrar ingreso</button>
+          </div>
+        </div>
+
+        <div id="scanResult" class="scan-result">
+          <h2 id="srTitle"></h2>
+          <p id="srNombre"></p>
+          <p id="srCodigo"></p>
+          <p id="srFecha"></p>
+          <button class="btn sm" style="background:#000;margin-top:12px" id="srIngresar" onclick="ingresarDirecto()">✅ Registrar ingreso</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script src="config.js"></script>
+<script src="common.js"></script>
+<script>
+let scanner = null, ultimoCodigo = null;
+
+function init(){
+  initSupabase();
+  checkValidadorSession();
+}
+
+/* ---------- Acceso a "Validar QR" ---------- */
+function checkValidadorSession(){
+  const nombre=sessionStorage.getItem('validadorNombre');
+  if(nombre){
+    document.getElementById('validarLogin').classList.add('hidden');
+    document.getElementById('validarPanel').classList.remove('hidden');
+    document.getElementById('validadorNombre').textContent=nombre;
+  }
+}
+
+async function loginValidador(){
+  const code=document.getElementById('validarCodigo').value.trim();
+  if(!code){ msg('msgValidarLogin','Ingresa el código de acceso.','err'); return; }
+  if(code===ADMIN_PASS){
+    sessionStorage.setItem('validadorNombre','Administrador');
+    checkValidadorSession();
+    return;
+  }
+  if(!sb){ msg('msgValidarLogin','Base de datos no configurada.','err'); return; }
+  const {data}=await sb.from('validadores').select('*').eq('clave',code.toUpperCase()).eq('activo',true).maybeSingle();
+  if(!data){ msg('msgValidarLogin','Código incorrecto o inactivo. Pide uno nuevo al administrador.','err'); return; }
+  sessionStorage.setItem('validadorNombre',data.nombre);
+  checkValidadorSession();
+}
+
+function logoutValidador(){
+  sessionStorage.removeItem('validadorNombre');
+  document.getElementById('validarLogin').classList.remove('hidden');
+  document.getElementById('validarPanel').classList.add('hidden');
+  document.getElementById('validarCodigo').value='';
+  document.getElementById('msgValidarLogin').innerHTML='';
+}
+
+/* ---------- Validación / Escáner ---------- */
+function startScan(){
+  if(scanner) return;
+  scanner=new Html5Qrcode('reader');
+  scanner.start({facingMode:'environment'},{fps:10,qrbox:220},
+    code=>{ scanner.pause(); consultarCodigo(code.trim().toUpperCase()); setTimeout(()=>{try{scanner.resume()}catch(e){}},2500); },
+    ()=>{}
+  ).catch(e=>alert('No se pudo abrir la cámara: '+e));
+}
+function stopScan(){ if(scanner){ scanner.stop().then(()=>{scanner.clear();scanner=null;}); } }
+
+function consultar(){ consultarCodigo(document.getElementById('fCodigo').value.trim().toUpperCase()); }
+async function consultarCodigo(code){
+  if(!sb||!code) return;
+  ultimoCodigo=code;
+  const {data}=await sb.from('entradas').select('*').eq('codigo',code).maybeSingle();
+  const box=document.getElementById('scanResult');
+  const ingBtn=document.getElementById('srIngresar');
+  box.className='scan-result show';
+  if(!data){
+    box.classList.add('sr-noex'); document.getElementById('srTitle').textContent='❌ NO EXISTE';
+    document.getElementById('srNombre').textContent=''; document.getElementById('srCodigo').textContent=code;
+    document.getElementById('srFecha').textContent=''; ingBtn.style.display='none';
+    await sb.from('validaciones').insert({codigo:code,resultado:'NO_EXISTE',accion:'CONSULTA'});
+    return;
+  }
+  const cls={VALIDA:'sr-valida',UTILIZADA:'sr-util',ANULADA:'sr-anula'}[data.estado];
+  box.classList.add(cls);
+  document.getElementById('srTitle').textContent=
+    data.estado==='VALIDA'?'✅ VÁLIDA':data.estado==='UTILIZADA'?'⚠️ YA UTILIZADA':'🚫 ANULADA';
+  document.getElementById('srNombre').textContent='Asistente: '+data.nombre_asistente;
+  document.getElementById('srCodigo').textContent='Código: '+data.codigo;
+  document.getElementById('srFecha').textContent= data.fecha_ingreso
+    ? 'Ingresó: '+new Date(data.fecha_ingreso).toLocaleString('es-PE')
+    : 'Compra: '+new Date(data.fecha_compra).toLocaleDateString('es-PE');
+  ingBtn.style.display = data.estado==='VALIDA' ? 'inline-block':'none';
+}
+
+function ingresar(){ registrarIngreso(document.getElementById('fCodigo').value.trim().toUpperCase()); }
+function ingresarDirecto(){ registrarIngreso(ultimoCodigo); }
+async function registrarIngreso(code){
+  if(!sb||!code) return;
+  const {data,error}=await sb.rpc('registrar_ingreso',{p_codigo:code});
+  if(error){ alert('Error: '+error.message); return; }
+  const box=document.getElementById('scanResult'); box.className='scan-result show';
+  document.getElementById('srIngresar').style.display='none';
+  const r=data.resultado;
+  if(r==='INGRESO_OK'){
+    box.classList.add('sr-valida'); document.getElementById('srTitle').textContent='✅ INGRESO REGISTRADO';
+    document.getElementById('srNombre').textContent='Bienvenido: '+data.nombre;
+    document.getElementById('srCodigo').textContent='Código: '+data.codigo;
+    document.getElementById('srFecha').textContent=new Date().toLocaleString('es-PE');
+  }else if(r==='UTILIZADA'){
+    box.classList.add('sr-util'); document.getElementById('srTitle').textContent='⚠️ ENTRADA YA UTILIZADA';
+    document.getElementById('srNombre').textContent=data.nombre||'';
+    document.getElementById('srCodigo').textContent='Código: '+(data.codigo||code);
+    document.getElementById('srFecha').textContent= data.fecha_ingreso?'Ingresó: '+new Date(data.fecha_ingreso).toLocaleString('es-PE'):'';
+  }else if(r==='ANULADA'){
+    box.classList.add('sr-anula'); document.getElementById('srTitle').textContent='🚫 ENTRADA ANULADA';
+    document.getElementById('srNombre').textContent=data.nombre||''; document.getElementById('srCodigo').textContent=code;
+  }else{
+    box.classList.add('sr-noex'); document.getElementById('srTitle').textContent='❌ NO EXISTE';
+    document.getElementById('srCodigo').textContent=code;
+  }
+}
+
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel de Administración · JORJVANA</title>
+
+<!-- Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- QR -->
+<script type="module">
+  import QRCode from "https://cdn.jsdelivr.net/npm/qrcode@1.5.3/+esm";
+  window.QRCode = QRCode;
+</script>
+<!-- PDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<!-- Excel -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="bar">
+  <div class="container">
+    <div class="logo">CONCIERTO ACÚSTICO <b>JORJVANA</b></div>
+    <nav>
+      <a href="index.html">Inicio</a>
+      <a href="validador.html">Validar QR</a>
+    </nav>
+  </div>
+</header>
+
+<div class="container">
+
+  <div id="cfgWarn" class="config-warn hidden">
+    ⚠️ Configura tus credenciales de Supabase en el archivo <b>config.js</b> (variables SUPABASE_URL y SUPABASE_KEY) para activar la base de datos.
+  </div>
+
+  <!-- ===================== ADMIN ===================== -->
+  <section id="admin" class="page active">
+    <div class="sec-hero">
+      <img src="concierto.jpg" alt="JORJVANA">
+      <div class="ov"><h1>Panel de <b>administración</b></h1><p>Gestión de pagos, entradas y estadísticas del evento</p></div>
+    </div>
+    <div id="adminLogin" class="card">
+      <h2>Panel de administración</h2>
+      <label>Clave de acceso</label>
+      <div style="position:relative">
+        <input type="password" id="adminPass" placeholder="Clave admin" style="padding-right:42px">
+        <button type="button" id="toggleAdminPass" onclick="togglePasswordField('adminPass','toggleAdminPass')" aria-label="Mostrar/ocultar clave"
+          style="position:absolute;right:4px;top:50%;transform:translateY(-50%);background:transparent;border:none;cursor:pointer;font-size:18px;padding:6px;line-height:1">👁️</button>
+      </div>
+      <div style="margin-top:14px"><button class="btn" onclick="loginAdmin()">Ingresar</button></div>
+      <div id="msgLogin"></div>
+    </div>
+
+    <div id="adminPanel" class="hidden">
+      <div class="card">
+        <h2>📊 Estadísticas</h2>
+        <div class="stats">
+          <div class="s"><b id="sVend">0</b><span>Vendidas</span></div>
+          <div class="s"><b id="sUtil">0</b><span>Utilizadas</span></div>
+          <div class="s"><b id="sDisp">500</b><span>Disponibles</span></div>
+          <div class="s"><b id="sRecau">S/ 0</b><span>Recaudación</span></div>
+        </div>
+        <div class="toolbar" style="margin-top:14px">
+          <label for="fAforo" style="align-self:center">Aforo total (entradas disponibles para la venta)</label>
+          <input type="number" id="fAforo" min="1" step="1" style="max-width:120px">
+          <button class="btn sm" onclick="guardarAforo()">Guardar aforo</button>
+        </div>
+        <div id="msgAforo"></div>
+      </div>
+
+      <div class="card">
+        <h2>👮 Validadores de QR (puerta)</h2>
+        <p class="muted">Crea un código de acceso para cada persona que ayudará a validar entradas en la puerta. Solo necesitan ese código para entrar a "Validar QR" (no necesitan la clave de admin).</p>
+        <div class="row">
+          <div><label>Nombre del validador</label><input id="fValNombre" placeholder="Ej: Juan - Puerta principal"></div>
+          <div><label>Código de acceso</label><input id="fValClave" placeholder="Déjalo vacío para generar uno" style="text-transform:uppercase"></div>
+        </div>
+        <div class="center" style="margin-top:14px"><button class="btn sm" onclick="agregarValidador()">➕ Agregar validador</button></div>
+        <div id="msgValidador"></div>
+        <div style="overflow-x:auto;margin-top:14px">
+          <table id="tblValidadores">
+            <thead><tr><th>Nombre</th><th>Código</th><th>Estado</th><th>Acciones</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="toolbar">
+          <input id="buscar" placeholder="Buscar por nombre, DNI o teléfono" oninput="renderCompradores()" style="flex:1;min-width:220px">
+          <button class="btn sm sec" onclick="exportExcel()">⬇ Exportar Excel</button>
+          <button class="btn sm" onclick="loadAdmin()">↻ Actualizar</button>
+        </div>
+        <div style="overflow-x:auto">
+          <table id="tblCompradores">
+            <thead><tr>
+              <th>Nombre</th><th>DNI</th><th>Celular</th><th>Cant.</th><th>Total</th>
+              <th>Pago</th><th>Estado</th><th>Comprobante</th><th>Acciones</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card" id="entradasCard" style="display:none">
+        <h2>🎟 Entradas generadas <span class="muted" id="entradasDe"></span></h2>
+        <div class="toolbar">
+          <button class="btn sm blue" onclick="descargarPDF()">📄 Descargar PDF (todas)</button>
+          <button class="btn sm green" onclick="enviarWhatsApp()">📲 Enviar por WhatsApp</button>
+          <button class="btn sm amber" onclick="enviarCorreo()">✉ Enviar por correo</button>
+        </div>
+        <div id="msgEntradas"></div>
+        <div id="ticketsArea"></div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script src="config.js"></script>
+<script src="common.js"></script>
+<script>
+let AFORO = 500;
+let compradores = [], entradasActuales = [], compradorActual = null;
+let validadores = [];
+
+function init(){
+  initSupabase();
+  if(sb) cargarAforo();
+}
+
+/* ---------- Aforo (capacidad total, editable por el admin) ---------- */
+async function cargarAforo(){
+  if(!sb) return;
+  try{
+    const {data} = await sb.from('configuracion').select('aforo').eq('id',1).single();
+    if(data?.aforo) AFORO = data.aforo;
+  }catch(e){ console.warn(e); }
+}
+
+async function guardarAforo(){
+  if(!sb) return;
+  const valor = parseInt(document.getElementById('fAforo').value, 10);
+  if(!valor || valor < 1){ msg('msgAforo','Ingresa una cantidad válida.','err'); return; }
+  const {count} = await sb.from('entradas').select('id',{count:'exact',head:true});
+  const vendidas = count || 0;
+  if(valor < vendidas){
+    msg('msgAforo',`No puede ser menor a las ${vendidas} entradas ya vendidas.`,'err');
+    return;
+  }
+  const {error} = await sb.from('configuracion').update({aforo:valor}).eq('id',1);
+  if(error){ msg('msgAforo','Error al guardar: '+error.message,'err'); return; }
+  AFORO = valor;
+  msg('msgAforo','Aforo actualizado correctamente.','ok');
+  loadAdmin();
+}
+
+/* ---------- Admin ---------- */
+function loginAdmin(){
+  if(document.getElementById('adminPass').value===ADMIN_PASS){
+    document.getElementById('adminLogin').classList.add('hidden');
+    document.getElementById('adminPanel').classList.remove('hidden');
+    loadAdmin();
+  }else{ msg('msgLogin','Clave incorrecta.','err'); }
+}
+
+async function loadAdmin(){
+  if(!sb) return;
+  await sb.rpc('limpiar_reservas_expiradas');
+  const {data:comp}=await sb.from('compradores').select('*').order('created_at',{ascending:false});
+  compradores=comp||[];
+  renderCompradores();
+  // estadísticas
+  const {data:ents}=await sb.from('entradas').select('estado');
+  const vend=ents?.length||0, util=ents?.filter(e=>e.estado==='UTILIZADA').length||0;
+  const recau=compradores.filter(c=>c.estado==='APROBADO').reduce((a,c)=>a+ +c.total,0);
+  const {data:disp}=await sb.rpc('contar_disponibles');
+  document.getElementById('sVend').textContent=vend;
+  document.getElementById('sUtil').textContent=util;
+  document.getElementById('sDisp').textContent=disp ?? Math.max(0, AFORO-vend);
+  document.getElementById('fAforo').value=AFORO;
+  document.getElementById('sRecau').textContent='S/ '+recau.toFixed(0);
+  cargarValidadores();
+}
+
+/* ---------- Validadores de QR (acceso a "Validar QR") ---------- */
+async function cargarValidadores(){
+  if(!sb) return;
+  const {data}=await sb.from('validadores').select('*').order('creado_en',{ascending:true});
+  validadores=data||[];
+  renderValidadores();
+}
+
+function renderValidadores(){
+  const tb=document.querySelector('#tblValidadores tbody'); if(!tb) return;
+  tb.innerHTML='';
+  validadores.forEach(v=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td>${v.nombre}</td>
+      <td style="font-family:monospace">${v.clave}</td>
+      <td><span class="badge ${v.activo?'b-aprob':'b-rech'}">${v.activo?'ACTIVO':'INACTIVO'}</span></td>
+      <td></td>`;
+    const acc=tr.lastElementChild;
+    const t=document.createElement('button'); t.className='btn sm sec'; t.textContent=v.activo?'Desactivar':'Activar';
+    t.onclick=()=>toggleValidador(v.id,!v.activo);
+    const d=document.createElement('button'); d.className='btn sm'; d.style.marginLeft='4px'; d.style.background='#777'; d.textContent='Eliminar';
+    d.onclick=()=>eliminarValidador(v.id);
+    acc.append(t,d);
+    tb.appendChild(tr);
+  });
+}
+
+function generarCodigoValidador(){
+  let clave;
+  do {
+    clave='VAL-'+Math.floor(10000+Math.random()*90000);
+  } while(validadores.some(v=>v.clave===clave));
+  return clave;
+}
+
+async function agregarValidador(){
+  const nombre=document.getElementById('fValNombre').value.trim();
+  let clave=document.getElementById('fValClave').value.trim().toUpperCase();
+  if(!nombre){ msg('msgValidador','Ingresa el nombre del validador.','err'); return; }
+  if(!clave){ clave=generarCodigoValidador(); }
+  const codigo=clave;
+  console.log({nombre, codigo, clave});
+  const {error}=await sb.from('validadores').insert({nombre,codigo,clave,activo:true});
+  if(error){ msg('msgValidador','Error: '+error.message,'err'); return; }
+  document.getElementById('fValNombre').value='';
+  document.getElementById('fValClave').value='';
+  msg('msgValidador',`✅ Validador agregado. Código de acceso: <b>${clave}</b>`,'ok');
+  cargarValidadores();
+}
+
+async function toggleValidador(id,activo){
+  await sb.from('validadores').update({activo}).eq('id',id);
+  cargarValidadores();
+}
+
+async function eliminarValidador(id){
+  if(!confirm('¿Eliminar este validador? Su código dejará de funcionar.')) return;
+  await sb.from('validadores').delete().eq('id',id);
+  cargarValidadores();
+}
+
+function renderCompradores(){
+  const q=document.getElementById('buscar').value.toLowerCase();
+  const tb=document.querySelector('#tblCompradores tbody'); tb.innerHTML='';
+  compradores.filter(c=>!q||c.nombre.toLowerCase().includes(q)||c.dni.includes(q)||c.celular.includes(q))
+  .forEach(c=>{
+    const bcls = c.estado==='APROBADO' ? 'b-aprob'
+      : (c.estado==='RECHAZADO'||c.estado==='EXPIRADO'||c.estado==='CANCELADO') ? 'b-rech'
+      : 'b-pend';
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td>${c.nombre}</td><td>${c.dni}</td><td>${c.celular}</td>
+      <td>${c.cantidad}</td><td>S/ ${(+c.total).toFixed(2)}</td><td>${c.metodo_pago||'-'}</td>
+      <td><span class="badge ${bcls}">${c.estado}</span>${c.codigo_pago?`<br><small class="muted">${c.codigo_pago}</small>`:''}</td>
+      <td>${c.comprobante_url?`<a href="${c.comprobante_url}" target="_blank">ver</a>`:'-'}</td>
+      <td></td>`;
+    const acc=tr.lastElementChild;
+    if(c.estado==='PENDIENTE'||c.estado==='PENDIENTE_APROBACION'){
+      const a=document.createElement('button'); a.className='btn sm green'; a.textContent='Aprobar'; a.onclick=()=>aprobar(c.id);
+      const r=document.createElement('button'); r.className='btn sm sec'; r.style.marginLeft='4px'; r.textContent='Rechazar'; r.onclick=()=>rechazar(c.id);
+      acc.append(a,r);
+    }else if(c.estado==='APROBADO'){
+      const v=document.createElement('button'); v.className='btn sm blue'; v.textContent='Ver entradas'; v.onclick=()=>verEntradas(c);
+      acc.append(v);
+    }
+    if(['RESERVADO','PENDIENTE','PENDIENTE_APROBACION','RECHAZADO','EXPIRADO','CANCELADO'].includes(c.estado)){
+      const e=document.createElement('button'); e.className='btn sm'; e.style.marginLeft='4px'; e.style.background='#777'; e.textContent='Eliminar'; e.onclick=()=>eliminarCompra(c.id);
+      acc.append(e);
+    }
+    tb.appendChild(tr);
+  });
+}
+
+async function aprobar(id){
+  if(!confirm('¿Aprobar pago y generar entradas?')) return;
+  const {error}=await sb.rpc('aprobar_pago',{p_comprador:id});
+  if(error){ alert('Error: '+error.message); return; }
+  await loadAdmin();
+  alert('Pago aprobado. Entradas generadas.');
+}
+async function rechazar(id){
+  if(!confirm('¿Rechazar este pago?')) return;
+  await sb.from('compradores').update({estado:'RECHAZADO',fecha_revision:new Date().toISOString()}).eq('id',id);
+  loadAdmin();
+}
+
+async function eliminarCompra(id){
+  if(!confirm('¿Eliminar esta compra? Esta acción no se puede deshacer.')) return;
+  try{
+    const {data,error}=await sb.rpc('eliminar_compra',{p_comprador:id});
+    if(error) throw error;
+    const res=unwrapRpc(data);
+    if(res?.comprobante_url){
+      const marker='/comprobantes/';
+      const idx=res.comprobante_url.indexOf(marker);
+      if(idx!==-1){
+        const path=decodeURIComponent(res.comprobante_url.slice(idx+marker.length));
+        await sb.storage.from('comprobantes').remove([path]);
+      }
+    }
+    await loadAdmin();
+  }catch(e){ alert('Error: '+e.message); }
+}
+
+function renderTickets(entradas,areaEl){
+  areaEl.innerHTML='';
+  for(const e of entradas){
+    const div=document.createElement('div'); div.className='ticket';
+    div.innerHTML=`<div class="left">
+        <h3>JORJVANA</h3>
+        <small>Concierto Acústico · 17 Julio 2026 · 7:00 PM</small><br>
+        <small>C.C. Vida Abundante</small>
+        <p style="margin-top:8px"><b>${e.nombre_asistente}</b></p>
+        <p class="muted">Entrada N° ${e.numero}</p>
+        <p class="code">${e.codigo}</p>
+      </div>
+      <div class="right"><canvas id="qr_${e.codigo}"></canvas><div class="code">${e.codigo}</div></div>`;
+    areaEl.appendChild(div);
+    QRCode.toCanvas(document.getElementById('qr_'+e.codigo), e.codigo, {width:140});
+  }
+}
+
+async function verEntradas(c){
+  compradorActual=c;
+  const {data}=await sb.from('entradas').select('*').eq('comprador_id',c.id).order('numero');
+  entradasActuales=data||[];
+  document.getElementById('entradasCard').style.display='block';
+  document.getElementById('entradasDe').textContent='· '+c.nombre;
+  renderTickets(entradasActuales,document.getElementById('ticketsArea'));
+  document.getElementById('entradasCard').scrollIntoView({behavior:'smooth'});
+}
+
+/* ---------- Exportar Excel ---------- */
+function exportExcel(){
+  const rows=compradores.map(c=>({
+    Nombre:c.nombre,DNI:c.dni,Celular:c.celular,Correo:c.correo||'',
+    Cantidad:c.cantidad,Total:c.total,Metodo:c.metodo_pago,Estado:c.estado,
+    Codigo_Pago:c.codigo_pago||'',
+    Fecha:new Date(c.fecha_pago).toLocaleString('es-PE')
+  }));
+  const ws=XLSX.utils.json_to_sheet(rows);
+  const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Compradores');
+  XLSX.writeFile(wb,'compradores_jorjvana.xlsx');
+}
+
+/* ---------- PDF de entradas ---------- */
+// Diseño base de la entrada virtual (entrada-virtual.png, 2160x3840px = 9:16).
+// El PDF usa el mismo formato 9:16 para que la imagen llene toda la página.
+const TICKET_W=100, TICKET_H=177.78; // mm, proporción 9:16
+async function cargarImagenDataURL(url){
+  const resp=await fetch(url);
+  const blob=await resp.blob();
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onload=()=>resolve(reader.result);
+    reader.onerror=reject;
+    reader.readAsDataURL(blob);
+  });
+}
+function fitFontSize(doc,text,maxWidth,maxSize=12,minSize=6){
+  let size=maxSize;
+  doc.setFontSize(size);
+  while(size>minSize && doc.getTextWidth(text)>maxWidth){
+    size-=0.5;
+    doc.setFontSize(size);
+  }
+}
+async function generarPDF(){
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({unit:'mm',format:[TICKET_W,TICKET_H]});
+  const fondo=await cargarImagenDataURL('entrada-virtual.png');
+  for(let i=0;i<entradasActuales.length;i++){
+    const e=entradasActuales[i];
+    if(i>0) doc.addPage([TICKET_W,TICKET_H],'portrait');
+    doc.addImage(fondo,'PNG',0,0,TICKET_W,TICKET_H);
+
+    // QR dentro del recuadro blanco del diseño
+    const qr=await QRCode.toDataURL(e.codigo,{width:300,margin:0});
+    doc.addImage(qr,'PNG',20.05,38.93,60,60);
+
+    // Nombre del asistente sobre la primera barra rosa
+    doc.setTextColor(255,255,255); doc.setFont(undefined,'bold');
+    fitFontSize(doc,e.nombre_asistente,46);
+    doc.text(e.nombre_asistente,TICKET_W/2,120.4,{align:'center'});
+
+    // Código de la entrada sobre la segunda barra rosa
+    fitFontSize(doc,e.codigo,46);
+    doc.text(e.codigo,TICKET_W/2,131.6,{align:'center'});
+  }
+  return doc;
+}
+
+async function descargarPDF(){
+  const doc=await generarPDF();
+  doc.save(`entradas_${compradorActual.nombre.replace(/\s/g,'_')}.pdf`);
+}
+
+function blobToBase64(blob){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onload=()=>resolve(reader.result.split(',')[1]);
+    reader.onerror=reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+function enviarWhatsApp(){
+  const codes=entradasActuales.map(e=>e.codigo).join(', ');
+  const txt=encodeURIComponent(`🎫 ¡Hola ${compradorActual.nombre}! Tus entradas para el CONCIERTO ACÚSTICO JORJVANA (17 Julio 2026, 7PM, C.C. Vida Abundante) están listas.\n\nCódigos: ${codes}\n\nDescarga tu PDF con los QR. ¡Nos vemos!`);
+  const num=compradorActual.celular.replace(/\D/g,'');
+  window.open(`https://wa.me/51${num}?text=${txt}`,'_blank');
+}
+async function enviarCorreo(){
+  if(!compradorActual.correo){ alert('Este comprador no tiene correo registrado.'); return; }
+  msg('msgEntradas','Enviando entradas por correo a '+compradorActual.correo+'...','ok');
+  try{
+    const doc=await generarPDF();
+    const pdfBase64=await blobToBase64(doc.output('blob'));
+    const resp=await fetch('/api/enviar-entradas',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        nombre:compradorActual.nombre,
+        correo:compradorActual.correo,
+        codigos:entradasActuales.map(e=>e.codigo),
+        pdfBase64
+      })
+    });
+    const data=await resp.json().catch(()=>({}));
+    if(!resp.ok || !data.ok) throw new Error(data.error||'No se pudo enviar el correo.');
+    msg('msgEntradas','✅ Entradas enviadas a '+compradorActual.correo,'ok');
+  }catch(e){
+    msg('msgEntradas','❌ Error al enviar el correo: '+e.message,'err');
+  }
+}
+
+init();
+</script>
+</body>
+</html>

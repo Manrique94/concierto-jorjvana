@@ -14,6 +14,7 @@ Aforo: hasta **500 asistentes** · Compras múltiples por persona · Validación
 | `concierto.jpg` | Imagen del evento (ya incluida) |
 | `vercel.json` | Configuración de hosting (Vercel) |
 | `yape.jpg` | QR de pago de Yape |
+| `entrada-virtual.png` | Diseño de fondo de la entrada virtual (PDF/correo), formato 9:16 |
 | `api/enviar-entradas.js` | Función serverless (Vercel) que envía el PDF de entradas por correo |
 
 ---
@@ -76,11 +77,22 @@ Si estas variables no están configuradas, el botón mostrará un error indicand
 
 **Página principal** → muestra el evento, contador de entradas y botón de compra.
 
-**Comprar** → no requiere crear cuenta ni iniciar sesión. El cliente llena sus datos, elige cantidad (el total se calcula solo), escanea el QR de Yape, sube su captura y registra la compra directamente en `public.compradores` (queda **PENDIENTE**). El comprador recibirá sus entradas por WhatsApp o correo una vez que el pago sea **APROBADO** desde el panel admin.
+**Comprar** → no requiere crear cuenta ni iniciar sesión. El flujo es:
+1. El cliente llena sus datos y elige la cantidad (el total se calcula solo).
+2. Presiona **"Pagar con Yape"**: se crea una reserva temporal en `public.compradores` con estado **RESERVADO**, un **código de pago** único (ej. `JORJ-12345`) y **30 minutos** para completar el pago (`expira_en`).
+3. Se muestra el QR de Yape, el monto total, el código de pago y una **cuenta regresiva** de 30 minutos.
+4. El cliente paga por Yape y sube la captura del comprobante (desde galería o tomando una foto con la cámara). El comprobante no puede repetirse: si el archivo ya fue usado en otra compra, se rechaza.
+5. Al subir el comprobante, la compra pasa a **PENDIENTE_APROBACION**.
+6. Si pasan los 30 minutos sin subir comprobante, la reserva pasa a **EXPIRADO** y el cupo se libera automáticamente (no se descuenta del aforo).
+7. El comprador recibirá sus entradas por WhatsApp o correo una vez que el pago sea **APROBADO** desde el panel admin.
+
+Las entradas (y por lo tanto el aforo) solo se descuentan cuando el pago es **APROBADO**; mientras una reserva está activa (RESERVADO no vencido o PENDIENTE_APROBACION), su cantidad se resta del contador de "Disponibles" para evitar sobreventa.
 
 **Admin** (con la clave configurada en `ADMIN_PASS`) →
-- Ve la lista de compradores, busca por nombre/DNI/teléfono.
-- **Aprobar** un pago genera automáticamente las entradas con código y QR únicos (ej. `JORJ-2026-A8F7K2`).
+- Ve la lista de compradores (incluye su código de pago y estado: RESERVADO, PENDIENTE_APROBACION, APROBADO, RECHAZADO, EXPIRADO, CANCELADO), busca por nombre/DNI/teléfono.
+- **Aprobar** un pago **PENDIENTE_APROBACION** genera automáticamente las entradas con código y QR únicos (ej. `JORJ-2026-A8F7K2`) y recién ahí se descuentan del aforo.
+- **Rechazar** un pago lo marca como RECHAZADO (no genera entradas).
+- **Eliminar** una compra en estado RESERVADO, PENDIENTE_APROBACION, RECHAZADO, EXPIRADO o CANCELADO la borra junto con su comprobante (si tiene). Las compras APROBADO y sus entradas nunca pueden eliminarse desde aquí.
 - Descarga las entradas en **PDF**, o envíalas por **WhatsApp** / **correo**.
 - Exporta todo a **Excel**.
 - En **📊 Estadísticas** puede **aumentar o reducir el aforo total** (cantidad de entradas disponibles para la venta) sin afectar las entradas ya vendidas.
@@ -96,6 +108,8 @@ Si estas variables no están configuradas, el botón mostrará un error indicand
 - Los códigos QR son **aleatorios** (generados con `gen_random_bytes`), no predecibles.
 - La generación verifica que no haya duplicados contra la base de datos.
 - Cada entrada solo puede usarse **una vez** (la marca de ingreso se hace dentro de una función con bloqueo de fila).
+- Cada comprobante de pago se identifica por su **hash SHA-256**; no puede registrarse el mismo comprobante en dos compras distintas (verificación en `registrar_comprobante` + índice único en la base de datos).
+- Las reservas de pago (RESERVADO) tienen una expiración de 30 minutos (`expira_en`); `limpiar_reservas_expiradas()` las marca como EXPIRADO automáticamente.
 - Para producción se recomienda proteger el panel admin con autenticación de Supabase (la versión actual usa una clave simple del lado del cliente).
 
 > 💡 Para escanear con la cámara, Netlify sirve la página por **HTTPS**, requisito de los navegadores. Funciona en Android/iOS.

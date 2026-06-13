@@ -7,135 +7,8 @@
 
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<!-- QR -->
-<script type="module">
-  import QRCode from "https://cdn.jsdelivr.net/npm/qrcode@1.5.3/+esm";
-  window.QRCode = QRCode;
-</script>
-<!-- Escáner QR -->
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-<!-- PDF -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<!-- Excel -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
-<style>
-  :root{
-    --rojo:#e60012; --negro:#111; --gris:#f4f4f5; --grisb:#e4e4e7;
-    --verde:#16a34a; --amber:#d97706; --azul:#2563eb; --radio:14px;
-  }
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:'Segoe UI',system-ui,Arial,sans-serif;color:var(--negro);line-height:1.5;position:relative;min-height:100vh}
-  /* Fondo fijo con la imagen del concierto */
-  body::before{content:"";position:fixed;inset:0;z-index:-2;
-    background:url('concierto.jpg') center/cover no-repeat fixed;
-    filter:blur(3px) brightness(.55);transform:scale(1.05)}
-  body::after{content:"";position:fixed;inset:0;z-index:-1;
-    background:linear-gradient(180deg,rgba(0,0,0,.45),rgba(20,20,25,.78))}
-  img{max-width:100%;display:block}
-  .container{max-width:1100px;margin:0 auto;padding:16px}
-  header.bar{background:rgba(0,0,0,.82);backdrop-filter:blur(8px);color:#fff;position:sticky;top:0;z-index:50;border-bottom:1px solid rgba(255,255,255,.1)}
-  header.bar .container{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 16px}
-  .logo{font-weight:800;letter-spacing:1px;font-size:18px}
-  .logo b{color:var(--rojo)}
-  nav button{background:transparent;border:1px solid #444;color:#fff;padding:8px 12px;border-radius:10px;cursor:pointer;font-size:13px;margin-left:6px}
-  nav button.active{background:var(--rojo);border-color:var(--rojo)}
-  nav button:hover{background:#222}
-  .page{display:none;animation:fade .25s}
-  .page.active{display:block}
-  /* Cabecera con imagen del concierto en cada sección */
-  .sec-hero{position:relative;border-radius:var(--radio);overflow:hidden;margin-top:16px;background:#111;
-    box-shadow:0 8px 28px rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.12)}
-  .sec-hero img{width:100%;display:block;max-height:220px;object-fit:contain;animation:zoomIn .9s ease}
-  .sec-hero .ov{position:absolute;inset:0;
-    background:linear-gradient(90deg,rgba(0,0,0,.72) 0%,rgba(0,0,0,.25) 45%,rgba(0,0,0,.55) 100%);
-    display:flex;flex-direction:column;justify-content:center;padding:0 26px}
-  .sec-hero .ov h1{color:#fff;font-size:26px;font-weight:800;text-shadow:0 2px 12px rgba(0,0,0,.8);animation:slideUp .6s ease}
-  .sec-hero .ov h1 b{color:var(--rojo)}
-  .sec-hero .ov p{color:#eee;font-size:14px;margin-top:4px;text-shadow:0 2px 8px rgba(0,0,0,.8);animation:slideUp .8s ease}
-  @media(max-width:560px){.sec-hero .ov h1{font-size:19px}.sec-hero img{min-height:120px;object-fit:cover}}
-  @keyframes zoomIn{from{transform:scale(1.08);opacity:.4}to{transform:scale(1);opacity:1}}
-  @keyframes slideUp{from{transform:translateY(14px);opacity:0}to{transform:translateY(0);opacity:1}}
-  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1}}
-
-  .hero{background:#fff;border-radius:var(--radio);overflow:hidden;box-shadow:0 4px 18px rgba(0,0,0,.08);margin-top:16px}
-  .hero img{width:100%;max-height:320px;object-fit:contain;background:#fff}
-  .hero-info{padding:16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;text-align:center}
-  .hero-info div{background:var(--gris);border-radius:10px;padding:12px}
-  .hero-info span{display:block;font-size:12px;color:#666;text-transform:uppercase}
-  .hero-info strong{font-size:17px}
-  .precio strong{color:var(--rojo)}
-
-  .counter{display:flex;justify-content:center;gap:20px;margin:14px 0;flex-wrap:wrap}
-  .counter .box{background:rgba(255,255,255,.97);border-radius:12px;padding:12px 20px;text-align:center;box-shadow:0 6px 20px rgba(0,0,0,.3);min-width:120px}
-  .counter .box b{display:block;font-size:26px;color:var(--rojo)}
-  .counter .box span{font-size:12px;color:#666;text-transform:uppercase}
-
-  .btn{background:var(--rojo);color:#fff;border:none;padding:14px 26px;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;transition:.15s}
-  .btn:hover{filter:brightness(.92)}
-  .btn:disabled{background:#aaa;cursor:not-allowed}
-  .btn.sec{background:#000}
-  .btn.green{background:var(--verde)}
-  .btn.amber{background:var(--amber)}
-  .btn.blue{background:var(--azul)}
-  .btn.sm{padding:8px 14px;font-size:13px}
-  .center{text-align:center}
-
-  .card{background:rgba(255,255,255,.97);border-radius:var(--radio);padding:22px;box-shadow:0 8px 30px rgba(0,0,0,.35);margin-top:16px;border:1px solid rgba(255,255,255,.4)}
-  .card h2{margin-bottom:14px;font-size:20px}
-  label{display:block;font-size:13px;font-weight:600;margin:10px 0 4px}
-  input,select{width:100%;padding:11px;border:1px solid var(--grisb);border-radius:10px;font-size:15px}
-  input:focus,select:focus{outline:2px solid var(--rojo);border-color:var(--rojo)}
-  .row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-  @media(max-width:560px){.row{grid-template-columns:1fr}}
-
-  .total-box{background:#000;color:#fff;border-radius:12px;padding:16px;margin-top:16px;display:flex;justify-content:space-between;align-items:center}
-  .total-box b{font-size:28px;color:#fff}
-
-  .pago-qr{display:grid;grid-template-columns:1fr;max-width:320px;margin:14px auto 0}
-  .pago-qr .q{background:var(--gris);border-radius:12px;padding:16px;text-align:center}
-  .pago-qr .q h4{margin-bottom:8px}
-  .pago-qr .q .ph{height:140px;display:flex;align-items:center;justify-content:center;background:#fff;border:2px dashed var(--grisb);border-radius:10px;color:#999;font-size:13px}
-
-  table{width:100%;border-collapse:collapse;font-size:14px}
-  th,td{padding:10px;border-bottom:1px solid var(--grisb);text-align:left}
-  th{background:var(--gris);font-size:12px;text-transform:uppercase;color:#555}
-  .badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;color:#fff}
-  .b-pend{background:var(--amber)} .b-aprob{background:var(--verde)} .b-rech{background:#777}
-  .b-valida{background:var(--verde)} .b-util{background:var(--azul)} .b-anula{background:#777} .b-noex{background:var(--rojo)}
-
-  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px}
-  .stats .s{background:rgba(255,255,255,.97);border-radius:12px;padding:18px;text-align:center;box-shadow:0 6px 20px rgba(0,0,0,.25)}
-  .stats .s b{display:block;font-size:30px;color:var(--rojo)}
-  .stats .s span{font-size:12px;color:#666;text-transform:uppercase}
-
-  .ticket{background:#fff;border:2px solid #000;border-radius:14px;overflow:hidden;margin:14px 0;display:flex;flex-wrap:wrap}
-  .ticket .left{flex:1;min-width:200px;padding:16px;border-right:2px dashed #000}
-  .ticket .left h3{color:var(--rojo);font-size:22px;letter-spacing:1px}
-  .ticket .left small{color:#555}
-  .ticket .right{width:170px;padding:16px;text-align:center}
-  .ticket .right canvas,.ticket .right img{margin:0 auto}
-  .ticket .code{font-family:monospace;font-weight:700;margin-top:6px;font-size:13px}
-
-  .alert{padding:14px;border-radius:12px;margin-top:14px;font-weight:600}
-  .alert.ok{background:#dcfce7;color:#166534}
-  .alert.warn{background:#fef3c7;color:#92400e}
-  .alert.err{background:#fee2e2;color:#991b1b}
-  .alert.info{background:#dbeafe;color:#1e40af}
-
-  .scan-result{text-align:center;padding:24px;border-radius:14px;margin-top:16px;color:#fff;display:none}
-  .scan-result.show{display:block}
-  .scan-result h2{font-size:30px;margin-bottom:6px}
-  .sr-valida{background:var(--verde)} .sr-util{background:var(--azul)} .sr-anula{background:#555} .sr-noex{background:var(--rojo)}
-
-  #reader{max-width:360px;margin:14px auto;border-radius:12px;overflow:hidden}
-  .muted{color:#666;font-size:13px}
-  .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
-  .config-warn{background:#fef3c7;color:#92400e;padding:12px;border-radius:10px;margin:12px 0;font-size:13px}
-  .hidden{display:none!important}
-  .pay-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-  @media(max-width:560px){.pay-grid{grid-template-columns:1fr}}
-</style>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 
@@ -145,8 +18,7 @@
     <nav>
       <button data-page="home" class="active">Inicio</button>
       <button data-page="comprar">Comprar</button>
-      <button data-page="validar">Validar QR</button>
-      <button data-page="admin">Admin</button>
+      <a href="validador.html">Validar QR</a>
     </nav>
   </div>
 </header>
@@ -170,9 +42,7 @@
     </div>
 
     <div class="counter">
-      <div class="box"><b id="cVendidas">0</b><span>Vendidas</span></div>
       <div class="box"><b id="cDisponibles">500</b><span>Disponibles</span></div>
-      <div class="box"><b id="cUtilizadas">0</b><span>Ingresaron</span></div>
     </div>
 
     <div class="center" style="margin:16px 0 24px">
@@ -188,7 +58,7 @@
     </div>
 
     <div id="comprarForm">
-      <div class="card">
+      <div class="card" id="cardDatos">
         <h2>1 · Datos del comprador</h2>
         <div class="row">
           <div><label>Nombre completo *</label><input id="fNombre" placeholder="Ej: Juan Pérez"></div>
@@ -212,8 +82,8 @@
         <div class="total-box"><span>Total a pagar</span><b id="fTotal">S/ 10.00</b></div>
       </div>
 
-      <div class="card">
-        <h2>2 · Método de pago</h2>
+      <div class="card" id="cardPagar">
+        <h2>2 · Pago con Yape</h2>
         <div class="pago-qr">
           <div class="q">
             <h4>Yape</h4>
@@ -222,229 +92,83 @@
           </div>
         </div>
 
-        <label style="margin-top:16px">Método usado</label>
-        <select id="fMetodo"><option value="Yape">Yape</option></select>
+        <p class="muted" style="margin-top:14px">Al presionar "Pagar con Yape" se reservarán tus entradas durante <b>30 minutos</b>. Tendrás ese tiempo para realizar el pago y subir tu comprobante.</p>
 
-        <label>Sube tu captura de pago *</label>
-        <input type="file" id="fComprob" accept="image/*">
-
-        <div class="center" style="margin-top:20px">
-          <button class="btn" id="btnComprar" onclick="comprar()">Registrar compra</button>
+        <div class="center" style="margin-top:16px">
+          <button class="btn" id="btnPagarYape" onclick="pagarConYape()">Pagar con Yape</button>
         </div>
-        <div id="msgComprar"></div>
+        <div id="msgPagar"></div>
       </div>
-    </div>
-  </section>
 
-  <!-- ===================== VALIDAR ===================== -->
-  <section id="validar" class="page">
-    <div class="sec-hero">
-      <img src="concierto.jpg" alt="JORJVANA">
-      <div class="ov"><h1>Validación de <b>ingreso</b></h1><p>Escanea el QR de la entrada en la puerta del evento</p></div>
-    </div>
+      <div class="card hidden" id="cardReserva">
+        <h2>3 · Confirma tu pago</h2>
+        <p class="muted">Realiza el pago por Yape al número <b>987 654 321</b> usando el monto indicado. Luego sube tu captura de pago antes de que termine el tiempo, indicando el código de pago como referencia.</p>
 
-    <div id="validarLogin" class="card">
-      <h2>Acceso de validador</h2>
-      <p class="muted">Esta sección es solo para personas autorizadas por el administrador. Ingresa el código de acceso que te entregaron para poder validar entradas en la puerta.</p>
-      <label>Código de acceso</label>
-      <div style="position:relative">
-        <input type="password" id="validarCodigo" placeholder="Código de acceso" style="padding-right:42px">
-        <button type="button" id="toggleValidarCodigo" onclick="togglePasswordField('validarCodigo','toggleValidarCodigo')" aria-label="Mostrar/ocultar clave"
-          style="position:absolute;right:4px;top:50%;transform:translateY(-50%);background:transparent;border:none;cursor:pointer;font-size:18px;padding:6px;line-height:1">👁️</button>
-      </div>
-      <div style="margin-top:14px"><button class="btn" onclick="loginValidador()">Ingresar</button></div>
-      <div id="msgValidarLogin"></div>
-    </div>
-
-    <div id="validarPanel" class="hidden">
-      <div class="card">
-        <div class="toolbar" style="justify-content:space-between;align-items:center;margin-bottom:0">
-          <span class="muted">Validador conectado: <b id="validadorNombre"></b></span>
-          <button class="btn sm sec" onclick="logoutValidador()">Cerrar sesión</button>
-        </div>
-      </div>
-      <div class="card">
-        <h2>Validación de ingreso</h2>
-        <p class="muted">Escanea el QR de la entrada con la cámara del celular, o ingresa el código manualmente.</p>
-
-        <div class="toolbar" style="margin-top:14px">
-          <button class="btn sm green" onclick="startScan()">📷 Iniciar escáner</button>
-          <button class="btn sm sec" onclick="stopScan()">⏹ Detener</button>
-        </div>
-        <div id="reader"></div>
-
-        <label>Código manual</label>
-        <div class="pay-grid">
-          <input id="fCodigo" placeholder="JORJ-2026-XXXXXX" style="text-transform:uppercase">
-          <div style="display:flex;gap:8px">
-            <button class="btn sm blue" onclick="consultar()" style="flex:1">Consultar</button>
-            <button class="btn sm green" onclick="ingresar()" style="flex:1">Registrar ingreso</button>
+        <div class="pago-qr">
+          <div class="q">
+            <h4>Yape</h4>
+            <div class="ph" id="qrYapeReserva">Coloca tu QR de Yape<br>(reemplaza en /yape.jpg)</div>
+            <p class="muted" style="margin-top:8px">Nº: 987 654 321</p>
           </div>
         </div>
 
-        <div id="scanResult" class="scan-result">
-          <h2 id="srTitle"></h2>
-          <p id="srNombre"></p>
-          <p id="srCodigo"></p>
-          <p id="srFecha"></p>
-          <button class="btn sm" style="background:#000;margin-top:12px" id="srIngresar" onclick="ingresarDirecto()">✅ Registrar ingreso</button>
-        </div>
-      </div>
-    </div>
-  </section>
+        <div class="total-box"><span>Monto a pagar</span><b id="rTotal">S/ 0.00</b></div>
 
-  <!-- ===================== ADMIN ===================== -->
-  <section id="admin" class="page">
-    <div class="sec-hero">
-      <img src="concierto.jpg" alt="JORJVANA">
-      <div class="ov"><h1>Panel de <b>administración</b></h1><p>Gestión de pagos, entradas y estadísticas del evento</p></div>
-    </div>
-    <div id="adminLogin" class="card">
-      <h2>Panel de administración</h2>
-      <label>Clave de acceso</label>
-      <div style="position:relative">
-        <input type="password" id="adminPass" placeholder="Clave admin" style="padding-right:42px">
-        <button type="button" id="toggleAdminPass" onclick="togglePasswordField('adminPass','toggleAdminPass')" aria-label="Mostrar/ocultar clave"
-          style="position:absolute;right:4px;top:50%;transform:translateY(-50%);background:transparent;border:none;cursor:pointer;font-size:18px;padding:6px;line-height:1">👁️</button>
-      </div>
-      <div style="margin-top:14px"><button class="btn" onclick="loginAdmin()">Ingresar</button></div>
-      <div id="msgLogin"></div>
-    </div>
+        <div class="center" style="margin-top:14px">
+          <span class="muted">Código de pago</span>
+          <div class="pago-codigo" id="rCodigo">JORJ-00000</div>
+        </div>
 
-    <div id="adminPanel" class="hidden">
-      <div class="card">
-        <h2>📊 Estadísticas</h2>
-        <div class="stats">
-          <div class="s"><b id="sVend">0</b><span>Vendidas</span></div>
-          <div class="s"><b id="sUtil">0</b><span>Utilizadas</span></div>
-          <div class="s"><b id="sDisp">500</b><span>Disponibles</span></div>
-          <div class="s"><b id="sRecau">S/ 0</b><span>Recaudación</span></div>
+        <div class="counter">
+          <div class="box"><b id="rTiempo">30:00</b><span>Tiempo restante</span></div>
         </div>
-        <div class="toolbar" style="margin-top:14px">
-          <label for="fAforo" style="align-self:center">Aforo total (entradas disponibles para la venta)</label>
-          <input type="number" id="fAforo" min="1" step="1" style="max-width:120px">
-          <button class="btn sm" onclick="guardarAforo()">Guardar aforo</button>
-        </div>
-        <div id="msgAforo"></div>
-      </div>
 
-      <div class="card">
-        <h2>👮 Validadores de QR (puerta)</h2>
-        <p class="muted">Crea un código de acceso para cada persona que ayudará a validar entradas en la puerta. Solo necesitan ese código para entrar a "Validar QR" (no necesitan la clave de admin).</p>
-        <div class="row">
-          <div><label>Nombre del validador</label><input id="fValNombre" placeholder="Ej: Juan - Puerta principal"></div>
-          <div><label>Código de acceso</label><input id="fValClave" placeholder="Déjalo vacío para generar uno" style="text-transform:uppercase"></div>
-        </div>
-        <div class="center" style="margin-top:14px"><button class="btn sm" onclick="agregarValidador()">➕ Agregar validador</button></div>
-        <div id="msgValidador"></div>
-        <div style="overflow-x:auto;margin-top:14px">
-          <table id="tblValidadores">
-            <thead><tr><th>Nombre</th><th>Código</th><th>Estado</th><th>Acciones</th></tr></thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </div>
+        <div id="msgReserva"></div>
 
-      <div class="card">
-        <div class="toolbar">
-          <input id="buscar" placeholder="Buscar por nombre, DNI o teléfono" oninput="renderCompradores()" style="flex:1;min-width:220px">
-          <button class="btn sm sec" onclick="exportExcel()">⬇ Exportar Excel</button>
-          <button class="btn sm" onclick="loadAdmin()">↻ Actualizar</button>
-        </div>
-        <div style="overflow-x:auto">
-          <table id="tblCompradores">
-            <thead><tr>
-              <th>Nombre</th><th>DNI</th><th>Celular</th><th>Cant.</th><th>Total</th>
-              <th>Pago</th><th>Estado</th><th>Comprobante</th><th>Acciones</th>
-            </tr></thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </div>
+        <div id="reservaForm">
+          <label style="margin-top:16px">Sube tu captura de pago *</label>
+          <div class="pay-grid">
+            <button type="button" class="btn sm sec" onclick="document.getElementById('fComprobGaleria').click()">🖼 Elegir archivo</button>
+            <button type="button" class="btn sm sec" onclick="document.getElementById('fComprobCamara').click()">📷 Tomar foto</button>
+          </div>
+          <input type="file" id="fComprobGaleria" accept="image/*" class="hidden" onchange="seleccionarComprobante(this.files[0])">
+          <input type="file" id="fComprobCamara" accept="image/*" capture="environment" class="hidden" onchange="seleccionarComprobante(this.files[0])">
+          <div class="comprob-preview" id="comprobPreview"></div>
 
-      <div class="card" id="entradasCard" style="display:none">
-        <h2>🎟 Entradas generadas <span class="muted" id="entradasDe"></span></h2>
-        <div class="toolbar">
-          <button class="btn sm blue" onclick="descargarPDF()">📄 Descargar PDF (todas)</button>
-          <button class="btn sm green" onclick="enviarWhatsApp()">📲 Enviar por WhatsApp</button>
-          <button class="btn sm amber" onclick="enviarCorreo()">✉ Enviar por correo</button>
+          <div class="center" style="margin-top:16px">
+            <button class="btn" id="btnConfirmarPago" onclick="confirmarPago()" disabled>Confirmar pago</button>
+          </div>
         </div>
-        <div id="msgEntradas"></div>
-        <div id="ticketsArea"></div>
       </div>
     </div>
   </section>
 
 </div>
 
-<!-- ====================== CONFIG ====================== -->
+<script src="config.js"></script>
+<script src="common.js"></script>
 <script>
-  /* ====== EDITA AQUÍ TUS CREDENCIALES ====== */
-  window.SUPABASE_URL = "https://lplnjgsfrrvpqimvkfwn.supabase.co";
-  window.SUPABASE_KEY = "sb_publishable_frV-_dvLZb3EshKIErCCnQ_my4mnHZS";
-  window.ADMIN_PASS   = "manrique94";
-  window.WHATSAPP_ADMIN = "51978134651"; // tu número con código de país
-  /* ========================================= */
-</script>
-
-<!-- ====================== LÓGICA ====================== -->
-<script>
-let sb = null;
-const PRECIO = 10;
-let AFORO = 500;
-let compradores = [], entradasActuales = [], compradorActual = null;
-let scanner = null, ultimoCodigo = null;
-
-function isConfigured(){
-  return SUPABASE_URL && !SUPABASE_URL.includes("TU-PROYECTO") && SUPABASE_KEY && !SUPABASE_KEY.includes("TU-ANON");
-}
+let reservaActual = null, comprobanteFile = null, countdownTimer = null;
 
 function init(){
-  if(isConfigured()){
-    sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    cargarAforo().then(cargarContador);
-  } else {
-    document.getElementById('cfgWarn').classList.remove('hidden');
-  }
+  initSupabase();
+  if(sb) cargarContador();
   // cargar QR de pago si existen
-  fetch('yape.jpg').then(r=>{ if(r.ok) document.getElementById('qrYape').innerHTML='<img src="yape.jpg" style="max-height:140px;margin:auto">'; });
-  checkValidadorSession();
-}
-
-/* ---------- Aforo (capacidad total, editable por el admin) ---------- */
-async function cargarAforo(){
-  if(!sb) return;
-  try{
-    const {data} = await sb.from('configuracion').select('aforo').eq('id',1).single();
-    if(data?.aforo) AFORO = data.aforo;
-  }catch(e){ console.warn(e); }
-}
-
-async function guardarAforo(){
-  if(!sb) return;
-  const valor = parseInt(document.getElementById('fAforo').value, 10);
-  if(!valor || valor < 1){ msg('msgAforo','Ingresa una cantidad válida.','err'); return; }
-  const {count} = await sb.from('entradas').select('id',{count:'exact',head:true});
-  const vendidas = count || 0;
-  if(valor < vendidas){
-    msg('msgAforo',`No puede ser menor a las ${vendidas} entradas ya vendidas.`,'err');
-    return;
-  }
-  const {error} = await sb.from('configuracion').update({aforo:valor}).eq('id',1);
-  if(error){ msg('msgAforo','Error al guardar: '+error.message,'err'); return; }
-  AFORO = valor;
-  msg('msgAforo','Aforo actualizado correctamente.','ok');
-  cargarContador();
-  loadAdmin();
+  fetch('yape.jpg').then(r=>{ if(r.ok){
+    const html='<img src="yape.jpg" style="max-height:140px;margin:auto">';
+    document.getElementById('qrYape').innerHTML=html;
+    document.getElementById('qrYapeReserva').innerHTML=html;
+  }});
+  restaurarReserva();
 }
 
 /* ---------- Navegación ---------- */
-document.querySelectorAll('nav button').forEach(b=>{
+document.querySelectorAll('nav button[data-page]').forEach(b=>{
   b.onclick=()=>goto(b.dataset.page);
 });
 function goto(page){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('nav button[data-page]').forEach(b=>b.classList.remove('active'));
   document.getElementById(page).classList.add('active');
   const btn=document.querySelector(`nav button[data-page="${page}"]`);
   if(btn) btn.classList.add('active');
@@ -456,12 +180,9 @@ function goto(page){
 async function cargarContador(){
   if(!sb) return;
   try{
-    const {data:ents} = await sb.from('entradas').select('estado');
-    const vend = ents?.length||0;
-    const util = ents?.filter(e=>e.estado==='UTILIZADA').length||0;
-    document.getElementById('cVendidas').textContent = vend;
-    document.getElementById('cUtilizadas').textContent = util;
-    document.getElementById('cDisponibles').textContent = Math.max(0, AFORO - vend);
+    const {data,error} = await sb.rpc('contar_disponibles');
+    if(error) throw error;
+    document.getElementById('cDisponibles').textContent = data ?? 0;
   }catch(e){ console.warn(e); }
 }
 
@@ -470,377 +191,166 @@ function calcTotal(){
   const c=+document.getElementById('fCant').value;
   document.getElementById('fTotal').textContent='S/ '+(c*PRECIO).toFixed(2);
 }
-function msg(id,txt,tipo){ document.getElementById(id).innerHTML=`<div class="alert ${tipo}">${txt}</div>`; }
 
-function togglePasswordField(inputId,btnId){
-  const inp=document.getElementById(inputId);
-  const btn=document.getElementById(btnId);
-  if(inp.type==='password'){ inp.type='text'; btn.textContent='🙈'; }
-  else{ inp.type='password'; btn.textContent='👁️'; }
-}
-
-async function comprar(){
-  if(!sb){ msg('msgComprar','Base de datos no configurada (revisa config.js).','err'); return; }
+/* ---------- Reserva temporal de pago (Yape, 30 minutos) ---------- */
+async function pagarConYape(){
+  if(!sb){ msg('msgPagar','Base de datos no configurada (revisa config.js).','err'); return; }
   const nombre=document.getElementById('fNombre').value.trim();
   const dni=document.getElementById('fDni').value.trim();
   const cel=document.getElementById('fCel').value.trim();
   const mail=document.getElementById('fMail').value.trim();
   const cant=+document.getElementById('fCant').value;
-  const metodo=document.getElementById('fMetodo').value;
-  const file=document.getElementById('fComprob').files[0];
+  const precio=PRECIO;
+  const total=cant*precio;
 
-  if(!nombre||!dni||!cel||!mail){ msg('msgComprar','Completa nombre, DNI, celular y correo.','err'); return; }
-  if(dni.length!==8){ msg('msgComprar','El DNI debe tener 8 dígitos.','warn'); return; }
-  if(!file){ msg('msgComprar','Sube la captura de tu pago.','warn'); return; }
+  console.log('cantidad:',cant,'precio:',precio,'total:',total);
 
-  const btn=document.getElementById('btnComprar'); btn.disabled=true; btn.textContent='Procesando...';
+  if(!nombre||!dni||!cel||!mail){ msg('msgPagar','Completa nombre, DNI, celular y correo.','err'); return; }
+  if(dni.length!==8){ msg('msgPagar','El DNI debe tener 8 dígitos.','warn'); return; }
+  if(!Number.isInteger(cant) || cant<1 || !Number.isFinite(precio) || precio<=0 || !Number.isFinite(total) || total<=0){
+    msg('msgPagar','Cantidad o precio inválidos. No se pudo calcular el total.','err');
+    return;
+  }
+
+  const btn=document.getElementById('btnPagarYape'); btn.disabled=true; btn.textContent='Generando...';
   try{
-    // subir comprobante
-    let url=null;
-    const path=`${Date.now()}_${dni}.${file.name.split('.').pop()}`;
-    const up=await sb.storage.from('comprobantes').upload(path,file);
-    if(!up.error){ url=sb.storage.from('comprobantes').getPublicUrl(path).data.publicUrl; }
-
-    const {error}=await sb.from('compradores').insert({
-      nombre,dni,celular:cel,correo:mail,cantidad:cant,
-      total:cant*PRECIO,comprobante_url:url,metodo_pago:metodo,estado:'PENDIENTE'
+    const {data,error}=await sb.rpc('crear_reserva',{
+      p_nombre:nombre, p_dni:dni, p_celular:cel, p_correo:mail,
+      p_cantidad:cant, p_total:total, p_metodo:'Yape'
     });
     if(error) throw error;
-    msg('msgComprar','✅ Compra registrada. Tu pago está <b>PENDIENTE DE VERIFICACIÓN</b>. Te contactaremos por WhatsApp o correo cuando sea aprobado y recibas tus entradas.','ok');
-    ['fNombre','fDni','fCel','fMail'].forEach(i=>document.getElementById(i).value='');
-    document.getElementById('fComprob').value='';
-  }catch(e){ msg('msgComprar','Error: '+e.message,'err'); }
-  btn.disabled=false; btn.textContent='Registrar compra';
-}
-
-/* ---------- Admin ---------- */
-function loginAdmin(){
-  if(document.getElementById('adminPass').value===ADMIN_PASS){
-    document.getElementById('adminLogin').classList.add('hidden');
-    document.getElementById('adminPanel').classList.remove('hidden');
-    loadAdmin();
-  }else{ msg('msgLogin','Clave incorrecta.','err'); }
-}
-
-async function loadAdmin(){
-  if(!sb) return;
-  const {data:comp}=await sb.from('compradores').select('*').order('created_at',{ascending:false});
-  compradores=comp||[];
-  renderCompradores();
-  // estadísticas
-  const {data:ents}=await sb.from('entradas').select('estado');
-  const vend=ents?.length||0, util=ents?.filter(e=>e.estado==='UTILIZADA').length||0;
-  const recau=compradores.filter(c=>c.estado==='APROBADO').reduce((a,c)=>a+ +c.total,0);
-  document.getElementById('sVend').textContent=vend;
-  document.getElementById('sUtil').textContent=util;
-  document.getElementById('sDisp').textContent=Math.max(0, AFORO-vend);
-  document.getElementById('fAforo').value=AFORO;
-  document.getElementById('sRecau').textContent='S/ '+recau.toFixed(0);
-  cargarValidadores();
-}
-
-/* ---------- Validadores de QR (acceso a "Validar QR") ---------- */
-let validadores = [];
-
-async function cargarValidadores(){
-  if(!sb) return;
-  const {data}=await sb.from('validadores').select('*').order('created_at',{ascending:true});
-  validadores=data||[];
-  renderValidadores();
-}
-
-function renderValidadores(){
-  const tb=document.querySelector('#tblValidadores tbody'); if(!tb) return;
-  tb.innerHTML='';
-  validadores.forEach(v=>{
-    const tr=document.createElement('tr');
-    tr.innerHTML=`
-      <td>${v.nombre}</td>
-      <td style="font-family:monospace">${v.clave}</td>
-      <td><span class="badge ${v.activo?'b-aprob':'b-rech'}">${v.activo?'ACTIVO':'INACTIVO'}</span></td>
-      <td></td>`;
-    const acc=tr.lastElementChild;
-    const t=document.createElement('button'); t.className='btn sm sec'; t.textContent=v.activo?'Desactivar':'Activar';
-    t.onclick=()=>toggleValidador(v.id,!v.activo);
-    const d=document.createElement('button'); d.className='btn sm'; d.style.marginLeft='4px'; d.style.background='#777'; d.textContent='Eliminar';
-    d.onclick=()=>eliminarValidador(v.id);
-    acc.append(t,d);
-    tb.appendChild(tr);
-  });
-}
-
-async function agregarValidador(){
-  const nombre=document.getElementById('fValNombre').value.trim();
-  let clave=document.getElementById('fValClave').value.trim().toUpperCase();
-  if(!nombre){ msg('msgValidador','Ingresa el nombre del validador.','err'); return; }
-  if(!clave){ clave='V'+Math.random().toString(36).slice(2,8).toUpperCase(); }
-  const {error}=await sb.from('validadores').insert({nombre,clave,activo:true});
-  if(error){ msg('msgValidador','Error: '+error.message,'err'); return; }
-  document.getElementById('fValNombre').value='';
-  document.getElementById('fValClave').value='';
-  msg('msgValidador',`✅ Validador agregado. Código de acceso: <b>${clave}</b>`,'ok');
-  cargarValidadores();
-}
-
-async function toggleValidador(id,activo){
-  await sb.from('validadores').update({activo}).eq('id',id);
-  cargarValidadores();
-}
-
-async function eliminarValidador(id){
-  if(!confirm('¿Eliminar este validador? Su código dejará de funcionar.')) return;
-  await sb.from('validadores').delete().eq('id',id);
-  cargarValidadores();
-}
-
-/* ---------- Acceso a "Validar QR" ---------- */
-function checkValidadorSession(){
-  const nombre=sessionStorage.getItem('validadorNombre');
-  if(nombre){
-    document.getElementById('validarLogin').classList.add('hidden');
-    document.getElementById('validarPanel').classList.remove('hidden');
-    document.getElementById('validadorNombre').textContent=nombre;
-  }
-}
-
-async function loginValidador(){
-  const code=document.getElementById('validarCodigo').value.trim();
-  if(!code){ msg('msgValidarLogin','Ingresa el código de acceso.','err'); return; }
-  if(code===ADMIN_PASS){
-    sessionStorage.setItem('validadorNombre','Administrador');
-    checkValidadorSession();
-    return;
-  }
-  if(!sb){ msg('msgValidarLogin','Base de datos no configurada.','err'); return; }
-  const {data}=await sb.from('validadores').select('*').eq('clave',code.toUpperCase()).eq('activo',true).maybeSingle();
-  if(!data){ msg('msgValidarLogin','Código incorrecto o inactivo. Pide uno nuevo al administrador.','err'); return; }
-  sessionStorage.setItem('validadorNombre',data.nombre);
-  checkValidadorSession();
-}
-
-function logoutValidador(){
-  sessionStorage.removeItem('validadorNombre');
-  document.getElementById('validarLogin').classList.remove('hidden');
-  document.getElementById('validarPanel').classList.add('hidden');
-  document.getElementById('validarCodigo').value='';
-  document.getElementById('msgValidarLogin').innerHTML='';
-}
-
-function renderCompradores(){
-  const q=document.getElementById('buscar').value.toLowerCase();
-  const tb=document.querySelector('#tblCompradores tbody'); tb.innerHTML='';
-  compradores.filter(c=>!q||c.nombre.toLowerCase().includes(q)||c.dni.includes(q)||c.celular.includes(q))
-  .forEach(c=>{
-    const bcls=c.estado==='APROBADO'?'b-aprob':c.estado==='RECHAZADO'?'b-rech':'b-pend';
-    const tr=document.createElement('tr');
-    tr.innerHTML=`
-      <td>${c.nombre}</td><td>${c.dni}</td><td>${c.celular}</td>
-      <td>${c.cantidad}</td><td>S/ ${(+c.total).toFixed(2)}</td><td>${c.metodo_pago||'-'}</td>
-      <td><span class="badge ${bcls}">${c.estado}</span></td>
-      <td>${c.comprobante_url?`<a href="${c.comprobante_url}" target="_blank">ver</a>`:'-'}</td>
-      <td></td>`;
-    const acc=tr.lastElementChild;
-    if(c.estado==='PENDIENTE'){
-      const a=document.createElement('button'); a.className='btn sm green'; a.textContent='Aprobar'; a.onclick=()=>aprobar(c.id);
-      const r=document.createElement('button'); r.className='btn sm sec'; r.style.marginLeft='4px'; r.textContent='Rechazar'; r.onclick=()=>rechazar(c.id);
-      acc.append(a,r);
-    }else if(c.estado==='APROBADO'){
-      const v=document.createElement('button'); v.className='btn sm blue'; v.textContent='Ver entradas'; v.onclick=()=>verEntradas(c);
-      acc.append(v);
+    const reserva=unwrapRpc(data);
+    console.log('crear_reserva ->',reserva);
+    if(!reserva || !reserva.id || !reserva.codigo_pago || !reserva.expira_en || reserva.total==null){
+      throw new Error('Respuesta inválida del servidor al crear la reserva.');
     }
-    tb.appendChild(tr);
-  });
+    iniciarReserva(reserva);
+  }catch(e){ msg('msgPagar','Error: '+e.message,'err'); }
+  btn.disabled=false; btn.textContent='Pagar con Yape';
 }
 
-async function aprobar(id){
-  if(!confirm('¿Aprobar pago y generar entradas?')) return;
-  const {error}=await sb.rpc('aprobar_pago',{p_comprador:id});
-  if(error){ alert('Error: '+error.message); return; }
-  await loadAdmin(); cargarContador();
-  alert('Pago aprobado. Entradas generadas.');
-}
-async function rechazar(id){
-  if(!confirm('¿Rechazar este pago?')) return;
-  await sb.from('compradores').update({estado:'RECHAZADO',fecha_revision:new Date().toISOString()}).eq('id',id);
-  loadAdmin();
+function iniciarReserva(data){
+  reservaActual=data;
+  comprobanteFile=null;
+  console.log('total:',data.total,'expira_en:',data.expira_en);
+  sessionStorage.setItem('reservaActual',JSON.stringify(data));
+
+  document.getElementById('cardDatos').classList.add('hidden');
+  document.getElementById('cardPagar').classList.add('hidden');
+  document.getElementById('cardReserva').classList.remove('hidden');
+  document.getElementById('reservaForm').classList.remove('hidden');
+
+  const totalNum=Number(data.total);
+  document.getElementById('rTotal').textContent='S/ '+(Number.isFinite(totalNum)?totalNum.toFixed(2):'0.00');
+  document.getElementById('rCodigo').textContent=data.codigo_pago || '—';
+  document.getElementById('msgReserva').innerHTML='';
+  document.getElementById('comprobPreview').innerHTML='';
+  document.getElementById('btnConfirmarPago').disabled=true;
+  document.getElementById('btnConfirmarPago').textContent='Confirmar pago';
+  document.getElementById('fComprobGaleria').value='';
+  document.getElementById('fComprobCamara').value='';
+
+  iniciarCountdown(data.expira_en);
 }
 
-function renderTickets(entradas,areaEl){
-  areaEl.innerHTML='';
-  for(const e of entradas){
-    const div=document.createElement('div'); div.className='ticket';
-    div.innerHTML=`<div class="left">
-        <h3>JORJVANA</h3>
-        <small>Concierto Acústico · 17 Julio 2026 · 7:00 PM</small><br>
-        <small>C.C. Vida Abundante</small>
-        <p style="margin-top:8px"><b>${e.nombre_asistente}</b></p>
-        <p class="muted">Entrada N° ${e.numero}</p>
-        <p class="code">${e.codigo}</p>
-      </div>
-      <div class="right"><canvas id="qr_${e.codigo}"></canvas><div class="code">${e.codigo}</div></div>`;
-    areaEl.appendChild(div);
-    QRCode.toCanvas(document.getElementById('qr_'+e.codigo), e.codigo, {width:140});
+function iniciarCountdown(expiraEn){
+  if(countdownTimer) clearInterval(countdownTimer);
+  let fin=new Date(expiraEn).getTime();
+  if(!Number.isFinite(fin)){
+    console.warn('expira_en inválido o ausente, usando 30*60 segundos desde ahora:',expiraEn);
+    fin=Date.now()+30*60*1000; // 30 * 60 segundos = 1800000 ms
   }
-}
-
-async function verEntradas(c){
-  compradorActual=c;
-  const {data}=await sb.from('entradas').select('*').eq('comprador_id',c.id).order('numero');
-  entradasActuales=data||[];
-  document.getElementById('entradasCard').style.display='block';
-  document.getElementById('entradasDe').textContent='· '+c.nombre;
-  renderTickets(entradasActuales,document.getElementById('ticketsArea'));
-  document.getElementById('entradasCard').scrollIntoView({behavior:'smooth'});
-}
-
-/* ---------- Exportar Excel ---------- */
-function exportExcel(){
-  const rows=compradores.map(c=>({
-    Nombre:c.nombre,DNI:c.dni,Celular:c.celular,Correo:c.correo||'',
-    Cantidad:c.cantidad,Total:c.total,Metodo:c.metodo_pago,Estado:c.estado,
-    Fecha:new Date(c.fecha_pago).toLocaleString('es-PE')
-  }));
-  const ws=XLSX.utils.json_to_sheet(rows);
-  const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Compradores');
-  XLSX.writeFile(wb,'compradores_jorjvana.xlsx');
-}
-
-/* ---------- PDF de entradas ---------- */
-async function generarPDF(){
-  const {jsPDF}=window.jspdf;
-  const doc=new jsPDF();
-  for(let i=0;i<entradasActuales.length;i++){
-    const e=entradasActuales[i];
-    if(i>0) doc.addPage();
-    doc.setFillColor(0,0,0); doc.rect(0,0,210,18,'F');
-    doc.setTextColor(230,0,18); doc.setFontSize(22); doc.setFont(undefined,'bold');
-    doc.text('JORJVANA',105,13,{align:'center'});
-    doc.setTextColor(0,0,0); doc.setFontSize(14); doc.text('Concierto Acústico',105,30,{align:'center'});
-    doc.setFont(undefined,'normal'); doc.setFontSize(11);
-    doc.text('17 de Julio 2026  ·  7:00 PM',105,40,{align:'center'});
-    doc.text('C.C. Vida Abundante',105,47,{align:'center'});
-    doc.setFontSize(13); doc.setFont(undefined,'bold');
-    doc.text('Asistente: '+e.nombre_asistente,20,70);
-    doc.text('Entrada N° '+e.numero,20,80);
-    doc.text('Precio: S/ 10.00',20,90);
-    const qr=await QRCode.toDataURL(e.codigo,{width:300});
-    doc.addImage(qr,'PNG',75,100,60,60);
-    doc.setFontSize(14); doc.text(e.codigo,105,170,{align:'center'});
-    doc.setFontSize(9); doc.setFont(undefined,'normal'); doc.setTextColor(120,120,120);
-    doc.text('Presenta este código QR en el ingreso. Válido para una sola persona.',105,185,{align:'center'});
+  function tick(){
+    const restanteSeg=Math.max(0,Math.floor((fin-Date.now())/1000));
+    if(restanteSeg<=0){
+      clearInterval(countdownTimer); countdownTimer=null;
+      document.getElementById('rTiempo').textContent='00:00';
+      expirarReserva();
+      return;
+    }
+    const m=Math.floor(restanteSeg/60), s=restanteSeg%60;
+    document.getElementById('rTiempo').textContent=`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
   }
-  return doc;
+  tick();
+  countdownTimer=setInterval(tick,1000);
 }
 
-async function descargarPDF(){
-  const doc=await generarPDF();
-  doc.save(`entradas_${compradorActual.nombre.replace(/\s/g,'_')}.pdf`);
-}
-
-function blobToBase64(blob){
-  return new Promise((resolve,reject)=>{
-    const reader=new FileReader();
-    reader.onload=()=>resolve(reader.result.split(',')[1]);
-    reader.onerror=reject;
-    reader.readAsDataURL(blob);
-  });
-}
-
-function enviarWhatsApp(){
-  const codes=entradasActuales.map(e=>e.codigo).join(', ');
-  const txt=encodeURIComponent(`🎫 ¡Hola ${compradorActual.nombre}! Tus entradas para el CONCIERTO ACÚSTICO JORJVANA (17 Julio 2026, 7PM, C.C. Vida Abundante) están listas.\n\nCódigos: ${codes}\n\nDescarga tu PDF con los QR. ¡Nos vemos!`);
-  const num=compradorActual.celular.replace(/\D/g,'');
-  window.open(`https://wa.me/51${num}?text=${txt}`,'_blank');
-}
-async function enviarCorreo(){
-  if(!compradorActual.correo){ alert('Este comprador no tiene correo registrado.'); return; }
-  msg('msgEntradas','Enviando entradas por correo a '+compradorActual.correo+'...','ok');
-  try{
-    const doc=await generarPDF();
-    const pdfBase64=await blobToBase64(doc.output('blob'));
-    const resp=await fetch('/api/enviar-entradas',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        nombre:compradorActual.nombre,
-        correo:compradorActual.correo,
-        codigos:entradasActuales.map(e=>e.codigo),
-        pdfBase64
-      })
-    });
-    const data=await resp.json().catch(()=>({}));
-    if(!resp.ok || !data.ok) throw new Error(data.error||'No se pudo enviar el correo.');
-    msg('msgEntradas','✅ Entradas enviadas a '+compradorActual.correo,'ok');
-  }catch(e){
-    msg('msgEntradas','❌ Error al enviar el correo: '+e.message,'err');
+async function expirarReserva(){
+  if(reservaActual && sb){
+    await sb.from('compradores').update({estado:'EXPIRADO',fecha_revision:new Date().toISOString()})
+      .eq('id',reservaActual.id).eq('estado','RESERVADO');
   }
-}
-
-/* ---------- Validación / Escáner ---------- */
-function startScan(){
-  if(scanner) return;
-  scanner=new Html5Qrcode('reader');
-  scanner.start({facingMode:'environment'},{fps:10,qrbox:220},
-    code=>{ scanner.pause(); consultarCodigo(code.trim().toUpperCase()); setTimeout(()=>{try{scanner.resume()}catch(e){}},2500); },
-    ()=>{}
-  ).catch(e=>alert('No se pudo abrir la cámara: '+e));
-}
-function stopScan(){ if(scanner){ scanner.stop().then(()=>{scanner.clear();scanner=null;}); } }
-
-function consultar(){ consultarCodigo(document.getElementById('fCodigo').value.trim().toUpperCase()); }
-async function consultarCodigo(code){
-  if(!sb||!code) return;
-  ultimoCodigo=code;
-  const {data}=await sb.from('entradas').select('*').eq('codigo',code).maybeSingle();
-  const box=document.getElementById('scanResult');
-  const ingBtn=document.getElementById('srIngresar');
-  box.className='scan-result show';
-  if(!data){
-    box.classList.add('sr-noex'); document.getElementById('srTitle').textContent='❌ NO EXISTE';
-    document.getElementById('srNombre').textContent=''; document.getElementById('srCodigo').textContent=code;
-    document.getElementById('srFecha').textContent=''; ingBtn.style.display='none';
-    await sb.from('validaciones').insert({codigo:code,resultado:'NO_EXISTE',accion:'CONSULTA'});
-    return;
-  }
-  const cls={VALIDA:'sr-valida',UTILIZADA:'sr-util',ANULADA:'sr-anula'}[data.estado];
-  box.classList.add(cls);
-  document.getElementById('srTitle').textContent=
-    data.estado==='VALIDA'?'✅ VÁLIDA':data.estado==='UTILIZADA'?'⚠️ YA UTILIZADA':'🚫 ANULADA';
-  document.getElementById('srNombre').textContent='Asistente: '+data.nombre_asistente;
-  document.getElementById('srCodigo').textContent='Código: '+data.codigo;
-  document.getElementById('srFecha').textContent= data.fecha_ingreso
-    ? 'Ingresó: '+new Date(data.fecha_ingreso).toLocaleString('es-PE')
-    : 'Compra: '+new Date(data.fecha_compra).toLocaleDateString('es-PE');
-  ingBtn.style.display = data.estado==='VALIDA' ? 'inline-block':'none';
-}
-
-function ingresar(){ registrarIngreso(document.getElementById('fCodigo').value.trim().toUpperCase()); }
-function ingresarDirecto(){ registrarIngreso(ultimoCodigo); }
-async function registrarIngreso(code){
-  if(!sb||!code) return;
-  const {data,error}=await sb.rpc('registrar_ingreso',{p_codigo:code});
-  if(error){ alert('Error: '+error.message); return; }
-  const box=document.getElementById('scanResult'); box.className='scan-result show';
-  document.getElementById('srIngresar').style.display='none';
-  const r=data.resultado;
-  if(r==='INGRESO_OK'){
-    box.classList.add('sr-valida'); document.getElementById('srTitle').textContent='✅ INGRESO REGISTRADO';
-    document.getElementById('srNombre').textContent='Bienvenido: '+data.nombre;
-    document.getElementById('srCodigo').textContent='Código: '+data.codigo;
-    document.getElementById('srFecha').textContent=new Date().toLocaleString('es-PE');
-  }else if(r==='UTILIZADA'){
-    box.classList.add('sr-util'); document.getElementById('srTitle').textContent='⚠️ ENTRADA YA UTILIZADA';
-    document.getElementById('srNombre').textContent=data.nombre||'';
-    document.getElementById('srCodigo').textContent='Código: '+(data.codigo||code);
-    document.getElementById('srFecha').textContent= data.fecha_ingreso?'Ingresó: '+new Date(data.fecha_ingreso).toLocaleString('es-PE'):'';
-  }else if(r==='ANULADA'){
-    box.classList.add('sr-anula'); document.getElementById('srTitle').textContent='🚫 ENTRADA ANULADA';
-    document.getElementById('srNombre').textContent=data.nombre||''; document.getElementById('srCodigo').textContent=code;
-  }else{
-    box.classList.add('sr-noex'); document.getElementById('srTitle').textContent='❌ NO EXISTE';
-    document.getElementById('srCodigo').textContent=code;
-  }
+  sessionStorage.removeItem('reservaActual');
+  reservaActual=null;
+  document.getElementById('reservaForm').classList.add('hidden');
+  document.getElementById('msgReserva').innerHTML=
+    '<div class="alert err">⏰ El tiempo para pagar expiró. Esta reserva fue cancelada y el cupo quedó liberado.</div>'+
+    '<div class="center" style="margin-top:14px"><button class="btn sec" onclick="reiniciarCompra()">Volver a intentar</button></div>';
   cargarContador();
+}
+
+function reiniciarCompra(){
+  if(countdownTimer){ clearInterval(countdownTimer); countdownTimer=null; }
+  document.getElementById('cardReserva').classList.add('hidden');
+  document.getElementById('cardDatos').classList.remove('hidden');
+  document.getElementById('cardPagar').classList.remove('hidden');
+  document.getElementById('msgPagar').innerHTML='';
+}
+
+function seleccionarComprobante(file){
+  if(!file) return;
+  comprobanteFile=file;
+  const url=URL.createObjectURL(file);
+  document.getElementById('comprobPreview').innerHTML=`<img src="${url}" alt="Comprobante">`;
+  document.getElementById('btnConfirmarPago').disabled=false;
+}
+
+async function hashArchivo(file){
+  const buf=await file.arrayBuffer();
+  const hashBuf=await crypto.subtle.digest('SHA-256',buf);
+  return Array.from(new Uint8Array(hashBuf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+async function confirmarPago(){
+  if(!sb||!reservaActual) return;
+  if(!comprobanteFile){ msg('msgReserva','Sube la captura de tu pago.','warn'); return; }
+
+  const btn=document.getElementById('btnConfirmarPago'); btn.disabled=true; btn.textContent='Procesando...';
+  try{
+    const hash=await hashArchivo(comprobanteFile);
+    const ext=(comprobanteFile.name.split('.').pop()||'jpg').toLowerCase();
+    const path=`${reservaActual.codigo_pago}_${Date.now()}.${ext}`;
+    const up=await sb.storage.from('comprobantes').upload(path,comprobanteFile);
+    if(up.error) throw up.error;
+    const url=sb.storage.from('comprobantes').getPublicUrl(path).data.publicUrl;
+
+    const {data,error}=await sb.rpc('registrar_comprobante',{
+      p_comprador:reservaActual.id, p_url:url, p_hash:hash
+    });
+    if(error) throw error;
+
+    reservaActual=unwrapRpc(data);
+    sessionStorage.removeItem('reservaActual');
+    if(countdownTimer){ clearInterval(countdownTimer); countdownTimer=null; }
+    document.getElementById('reservaForm').classList.add('hidden');
+    msg('msgReserva','✅ Comprobante recibido. Tu pago está <b>PENDIENTE DE APROBACIÓN</b>. Te contactaremos por WhatsApp o correo cuando sea aprobado y recibas tus entradas.','ok');
+  }catch(e){
+    msg('msgReserva','Error: '+e.message,'err');
+    btn.disabled=false; btn.textContent='Confirmar pago';
+  }
+}
+
+function restaurarReserva(){
+  const raw=sessionStorage.getItem('reservaActual');
+  if(!raw) return;
+  try{
+    const data=JSON.parse(raw);
+    if(data.estado==='RESERVADO' && new Date(data.expira_en).getTime()>Date.now()){
+      iniciarReserva(data);
+    }else{
+      sessionStorage.removeItem('reservaActual');
+    }
+  }catch(e){ sessionStorage.removeItem('reservaActual'); }
 }
 
 init();
