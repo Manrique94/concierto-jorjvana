@@ -24,7 +24,6 @@ Aforo: hasta **500 asistentes** · Compras múltiples por persona · Validación
 2. Cuando esté listo, ve a **SQL Editor → New query**.
 3. Copia y pega TODO el contenido de `supabase_schema.sql` y presiona **Run**.
    Esto crea las tablas (compradores, entradas, validaciones), las funciones y el bucket de comprobantes.
-4. (Recomendado) En **Authentication → Providers → Email**, desactiva **"Confirm email"** para que al crear una cuenta el usuario quede con sesión iniciada de inmediato (sin tener que confirmar por correo).
 
 ### 2) Obtener tus credenciales
 En Supabase: **Project Settings → API**. Copia:
@@ -64,17 +63,17 @@ Se muestra automáticamente en la sección de pago. Ajusta también el número q
 
 **Página principal** → muestra el evento, contador de entradas y botón de compra.
 
-**Mi Cuenta** → el cliente crea una cuenta (correo + contraseña) o inicia sesión. Es el paso obligatorio antes de poder comprar: así sus compras quedan guardadas en su cuenta y puede volver más tarde a ver el estado de sus pagos y, cuando estén **APROBADOS**, sus entradas con código QR (con opción de descargar el PDF).
-
-**Comprar** → solo disponible con sesión iniciada. El cliente llena sus datos, elige cantidad (el total se calcula solo), escanea el QR de Yape, sube su captura y registra la compra (queda **PENDIENTE**, asociada a su cuenta).
+**Comprar** → no requiere crear cuenta ni iniciar sesión. El cliente llena sus datos, elige cantidad (el total se calcula solo), escanea el QR de Yape, sube su captura y registra la compra directamente en `public.compradores` (queda **PENDIENTE**). El comprador recibirá sus entradas por WhatsApp o correo una vez que el pago sea **APROBADO** desde el panel admin.
 
 **Admin** (con la clave configurada en `ADMIN_PASS`) →
 - Ve la lista de compradores, busca por nombre/DNI/teléfono.
 - **Aprobar** un pago genera automáticamente las entradas con código y QR únicos (ej. `JORJ-2026-A8F7K2`).
 - Descarga las entradas en **PDF**, o envíalas por **WhatsApp** / **correo**.
 - Exporta todo a **Excel**.
+- En **📊 Estadísticas** puede **aumentar o reducir el aforo total** (cantidad de entradas disponibles para la venta) sin afectar las entradas ya vendidas.
 
 **Validar QR** → en la puerta, desde cualquier celular:
+- Acceso restringido: pide un **código de validador**. El administrador (clave `ADMIN_PASS`) puede crear, activar/desactivar o eliminar estos códigos desde **Admin → 👮 Validadores de QR**, uno por cada persona que ayudará en la puerta. El administrador también puede entrar aquí con su propia clave.
 - **Consultar**: muestra estado (VÁLIDA / UTILIZADA / ANULADA / NO EXISTE), nombre y código.
 - **Registrar ingreso**: marca la entrada como **UTILIZADA**. Si la reescanean, avisa *"ENTRADA YA UTILIZADA"*.
 

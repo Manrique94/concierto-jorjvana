@@ -13,7 +13,6 @@ create extension if not exists "pgcrypto";
 -- ------------------------------------------------------------
 create table if not exists public.compradores (
   id              uuid primary key default gen_random_uuid(),
-  user_id         uuid references auth.users(id) on delete set null,
   nombre          text not null,
   dni             text not null,
   celular         text not null,
@@ -28,7 +27,9 @@ create table if not exists public.compradores (
   created_at      timestamptz not null default now()
 );
 
-create index if not exists idx_compradores_user on public.compradores(user_id);
+-- Migración: elimina rastros de la versión anterior con Supabase Auth
+drop index if exists idx_compradores_user;
+alter table public.compradores drop column if exists user_id;
 
 -- ------------------------------------------------------------
 -- TABLA: entradas
@@ -59,6 +60,29 @@ create table if not exists public.validaciones (
   accion      text,                            -- 'CONSULTA' | 'INGRESO'
   fecha       timestamptz not null default now()
 );
+
+-- ------------------------------------------------------------
+-- TABLA: validadores (personas autorizadas por el admin para
+-- validar/registrar el ingreso de entradas en la puerta)
+-- ------------------------------------------------------------
+create table if not exists public.validadores (
+  id         uuid primary key default gen_random_uuid(),
+  nombre     text not null,
+  clave      text not null unique,
+  activo     boolean not null default true,
+  created_at timestamptz not null default now()
+);
+
+-- ------------------------------------------------------------
+-- TABLA: configuracion (aforo editable desde el panel admin)
+-- ------------------------------------------------------------
+create table if not exists public.configuracion (
+  id    integer primary key default 1,
+  aforo integer not null default 500,
+  constraint configuracion_single_row check (id = 1)
+);
+insert into public.configuracion (id, aforo) values (1, 500)
+  on conflict (id) do nothing;
 
 -- ------------------------------------------------------------
 -- SECUENCIA para numeración global de entradas (1..500...)
@@ -153,15 +177,25 @@ $$;
 alter table public.compradores enable row level security;
 alter table public.entradas    enable row level security;
 alter table public.validaciones enable row level security;
+alter table public.configuracion enable row level security;
+alter table public.validadores enable row level security;
 
--- Política permisiva (clave anónima). Para producción se recomienda
--- restringir el panel admin con autenticación. Aquí se permite operar
--- con la anon key para simplificar el despliegue.
+-- Política permisiva (clave anónima). La compra no requiere cuenta ni
+-- inicio de sesión: cualquiera puede registrar su compra directamente.
+-- Para producción se recomienda restringir el panel admin con autenticación.
+drop policy if exists "ver compradores"        on public.compradores;
+drop policy if exists "crear compra propia"    on public.compradores;
+drop policy if exists "crear compra"           on public.compradores;
+drop policy if exists "actualizar compradores" on public.compradores;
 create policy "ver compradores"        on public.compradores for select using (true);
-create policy "crear compra propia"    on public.compradores for insert with check (auth.uid() = user_id);
+create policy "crear compra"           on public.compradores for insert with check (true);
 create policy "actualizar compradores" on public.compradores for update using (true) with check (true);
 create policy "anon entradas"     on public.entradas     for all using (true) with check (true);
 create policy "anon validaciones" on public.validaciones for all using (true) with check (true);
+create policy "ver configuracion"        on public.configuracion for select using (true);
+create policy "actualizar configuracion" on public.configuracion for update using (true) with check (true);
+drop policy if exists "anon validadores" on public.validadores;
+create policy "anon validadores" on public.validadores for all using (true) with check (true);
 
 -- ------------------------------------------------------------
 -- STORAGE: bucket público para comprobantes de pago
@@ -183,7 +217,7 @@ select
   (select count(*) from public.entradas)                                as vendidas,
   (select count(*) from public.entradas where estado='UTILIZADA')       as utilizadas,
   (select coalesce(sum(total),0) from public.compradores where estado='APROBADO') as recaudacion,
-  (500 - (select count(*) from public.entradas))                        as disponibles;
+  ((select aforo from public.configuracion where id=1) - (select count(*) from public.entradas)) as disponibles;
 
 -- ============================================================
 -- FIN DEL ESQUEMA

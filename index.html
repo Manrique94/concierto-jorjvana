@@ -141,7 +141,6 @@
     <div class="logo">CONCIERTO ACÚSTICO <b>JORJVANA</b></div>
     <nav>
       <button data-page="home" class="active">Inicio</button>
-      <button data-page="cuenta" id="navCuenta">Mi Cuenta</button>
       <button data-page="comprar">Comprar</button>
       <button data-page="validar">Validar QR</button>
       <button data-page="admin">Admin</button>
@@ -178,78 +177,11 @@
     </div>
   </section>
 
-  <!-- ===================== CUENTA ===================== -->
-  <section id="cuenta" class="page">
-    <div class="sec-hero">
-      <img src="concierto.jpg" alt="JORJVANA">
-      <div class="ov"><h1>Mi <b>cuenta</b></h1><p>Crea tu cuenta o inicia sesión para comprar tus entradas y verlas cuando sean aprobadas</p></div>
-    </div>
-
-    <div id="authBox" class="card">
-      <div class="toolbar">
-        <button class="btn sm" id="tabLogin" onclick="showAuthTab('login')">Iniciar sesión</button>
-        <button class="btn sm sec" id="tabRegister" onclick="showAuthTab('register')">Crear cuenta</button>
-      </div>
-
-      <div id="loginForm">
-        <h2>Iniciar sesión</h2>
-        <label>Correo</label>
-        <input id="loginEmail" type="email" placeholder="correo@ejemplo.com">
-        <label>Contraseña</label>
-        <div style="position:relative">
-          <input type="password" id="loginPass" placeholder="Tu contraseña" style="padding-right:42px">
-          <button type="button" id="toggleLoginPass" onclick="togglePasswordField('loginPass','toggleLoginPass')" aria-label="Mostrar/ocultar clave"
-            style="position:absolute;right:4px;top:50%;transform:translateY(-50%);background:transparent;border:none;cursor:pointer;font-size:18px;padding:6px;line-height:1">👁️</button>
-        </div>
-        <div class="center" style="margin-top:16px"><button class="btn" onclick="iniciarSesion()">Ingresar</button></div>
-      </div>
-
-      <div id="registerForm" class="hidden">
-        <h2>Crear cuenta</h2>
-        <label>Correo</label>
-        <input id="regEmail" type="email" placeholder="correo@ejemplo.com">
-        <label>Contraseña</label>
-        <div style="position:relative">
-          <input type="password" id="regPass" placeholder="Mínimo 6 caracteres" style="padding-right:42px">
-          <button type="button" id="toggleRegPass" onclick="togglePasswordField('regPass','toggleRegPass')" aria-label="Mostrar/ocultar clave"
-            style="position:absolute;right:4px;top:50%;transform:translateY(-50%);background:transparent;border:none;cursor:pointer;font-size:18px;padding:6px;line-height:1">👁️</button>
-        </div>
-        <label>Confirmar contraseña</label>
-        <div style="position:relative">
-          <input type="password" id="regPass2" placeholder="Repite tu contraseña" style="padding-right:42px">
-          <button type="button" id="toggleRegPass2" onclick="togglePasswordField('regPass2','toggleRegPass2')" aria-label="Mostrar/ocultar clave"
-            style="position:absolute;right:4px;top:50%;transform:translateY(-50%);background:transparent;border:none;cursor:pointer;font-size:18px;padding:6px;line-height:1">👁️</button>
-        </div>
-        <div class="center" style="margin-top:16px"><button class="btn" onclick="registrarse()">Crear cuenta</button></div>
-      </div>
-
-      <div id="msgAuth"></div>
-    </div>
-
-    <div id="cuentaPanel" class="hidden">
-      <div class="card">
-        <h2>👤 Mi cuenta</h2>
-        <p>Conectado como <b id="cuentaEmail"></b></p>
-        <div style="margin-top:14px"><button class="btn sm sec" onclick="logout()">Cerrar sesión</button></div>
-      </div>
-      <div class="card">
-        <h2>🎫 Mis compras y entradas</h2>
-        <div id="misComprasArea"><p class="muted">Cargando...</p></div>
-      </div>
-    </div>
-  </section>
-
   <!-- ===================== COMPRAR ===================== -->
   <section id="comprar" class="page">
     <div class="sec-hero">
       <img src="concierto.jpg" alt="JORJVANA">
       <div class="ov"><h1>Compra tus <b>entradas</b></h1><p>17 Julio 2026 · 7:00 PM · C.C. Vida Abundante · S/ 10.00</p></div>
-    </div>
-
-    <div id="comprarLoginRequired" class="card hidden">
-      <h2>Inicia sesión para comprar</h2>
-      <p class="muted">Debes crear una cuenta o iniciar sesión antes de registrar tu compra, así tus entradas quedan guardadas en tu cuenta y podrás verlas cuando sean aprobadas.</p>
-      <div class="center" style="margin-top:16px"><button class="btn" onclick="goto('cuenta')">Ir a Mi Cuenta</button></div>
     </div>
 
     <div id="comprarForm">
@@ -307,31 +239,53 @@
       <img src="concierto.jpg" alt="JORJVANA">
       <div class="ov"><h1>Validación de <b>ingreso</b></h1><p>Escanea el QR de la entrada en la puerta del evento</p></div>
     </div>
-    <div class="card">
-      <h2>Validación de ingreso</h2>
-      <p class="muted">Escanea el QR de la entrada con la cámara del celular, o ingresa el código manualmente.</p>
 
-      <div class="toolbar" style="margin-top:14px">
-        <button class="btn sm green" onclick="startScan()">📷 Iniciar escáner</button>
-        <button class="btn sm sec" onclick="stopScan()">⏹ Detener</button>
+    <div id="validarLogin" class="card">
+      <h2>Acceso de validador</h2>
+      <p class="muted">Esta sección es solo para personas autorizadas por el administrador. Ingresa el código de acceso que te entregaron para poder validar entradas en la puerta.</p>
+      <label>Código de acceso</label>
+      <div style="position:relative">
+        <input type="password" id="validarCodigo" placeholder="Código de acceso" style="padding-right:42px">
+        <button type="button" id="toggleValidarCodigo" onclick="togglePasswordField('validarCodigo','toggleValidarCodigo')" aria-label="Mostrar/ocultar clave"
+          style="position:absolute;right:4px;top:50%;transform:translateY(-50%);background:transparent;border:none;cursor:pointer;font-size:18px;padding:6px;line-height:1">👁️</button>
       </div>
-      <div id="reader"></div>
+      <div style="margin-top:14px"><button class="btn" onclick="loginValidador()">Ingresar</button></div>
+      <div id="msgValidarLogin"></div>
+    </div>
 
-      <label>Código manual</label>
-      <div class="pay-grid">
-        <input id="fCodigo" placeholder="JORJ-2026-XXXXXX" style="text-transform:uppercase">
-        <div style="display:flex;gap:8px">
-          <button class="btn sm blue" onclick="consultar()" style="flex:1">Consultar</button>
-          <button class="btn sm green" onclick="ingresar()" style="flex:1">Registrar ingreso</button>
+    <div id="validarPanel" class="hidden">
+      <div class="card">
+        <div class="toolbar" style="justify-content:space-between;align-items:center;margin-bottom:0">
+          <span class="muted">Validador conectado: <b id="validadorNombre"></b></span>
+          <button class="btn sm sec" onclick="logoutValidador()">Cerrar sesión</button>
         </div>
       </div>
+      <div class="card">
+        <h2>Validación de ingreso</h2>
+        <p class="muted">Escanea el QR de la entrada con la cámara del celular, o ingresa el código manualmente.</p>
 
-      <div id="scanResult" class="scan-result">
-        <h2 id="srTitle"></h2>
-        <p id="srNombre"></p>
-        <p id="srCodigo"></p>
-        <p id="srFecha"></p>
-        <button class="btn sm" style="background:#000;margin-top:12px" id="srIngresar" onclick="ingresarDirecto()">✅ Registrar ingreso</button>
+        <div class="toolbar" style="margin-top:14px">
+          <button class="btn sm green" onclick="startScan()">📷 Iniciar escáner</button>
+          <button class="btn sm sec" onclick="stopScan()">⏹ Detener</button>
+        </div>
+        <div id="reader"></div>
+
+        <label>Código manual</label>
+        <div class="pay-grid">
+          <input id="fCodigo" placeholder="JORJ-2026-XXXXXX" style="text-transform:uppercase">
+          <div style="display:flex;gap:8px">
+            <button class="btn sm blue" onclick="consultar()" style="flex:1">Consultar</button>
+            <button class="btn sm green" onclick="ingresar()" style="flex:1">Registrar ingreso</button>
+          </div>
+        </div>
+
+        <div id="scanResult" class="scan-result">
+          <h2 id="srTitle"></h2>
+          <p id="srNombre"></p>
+          <p id="srCodigo"></p>
+          <p id="srFecha"></p>
+          <button class="btn sm" style="background:#000;margin-top:12px" id="srIngresar" onclick="ingresarDirecto()">✅ Registrar ingreso</button>
+        </div>
       </div>
     </div>
   </section>
@@ -362,6 +316,29 @@
           <div class="s"><b id="sUtil">0</b><span>Utilizadas</span></div>
           <div class="s"><b id="sDisp">500</b><span>Disponibles</span></div>
           <div class="s"><b id="sRecau">S/ 0</b><span>Recaudación</span></div>
+        </div>
+        <div class="toolbar" style="margin-top:14px">
+          <label for="fAforo" style="align-self:center">Aforo total (entradas disponibles para la venta)</label>
+          <input type="number" id="fAforo" min="1" step="1" style="max-width:120px">
+          <button class="btn sm" onclick="guardarAforo()">Guardar aforo</button>
+        </div>
+        <div id="msgAforo"></div>
+      </div>
+
+      <div class="card">
+        <h2>👮 Validadores de QR (puerta)</h2>
+        <p class="muted">Crea un código de acceso para cada persona que ayudará a validar entradas en la puerta. Solo necesitan ese código para entrar a "Validar QR" (no necesitan la clave de admin).</p>
+        <div class="row">
+          <div><label>Nombre del validador</label><input id="fValNombre" placeholder="Ej: Juan - Puerta principal"></div>
+          <div><label>Código de acceso</label><input id="fValClave" placeholder="Déjalo vacío para generar uno" style="text-transform:uppercase"></div>
+        </div>
+        <div class="center" style="margin-top:14px"><button class="btn sm" onclick="agregarValidador()">➕ Agregar validador</button></div>
+        <div id="msgValidador"></div>
+        <div style="overflow-x:auto;margin-top:14px">
+          <table id="tblValidadores">
+            <thead><tr><th>Nombre</th><th>Código</th><th>Estado</th><th>Acciones</th></tr></thead>
+            <tbody></tbody>
+          </table>
         </div>
       </div>
 
@@ -409,10 +386,10 @@
 <!-- ====================== LÓGICA ====================== -->
 <script>
 let sb = null;
-const PRECIO = 10, AFORO = 500;
+const PRECIO = 10;
+let AFORO = 500;
 let compradores = [], entradasActuales = [], compradorActual = null;
 let scanner = null, ultimoCodigo = null;
-let currentUser = null;
 
 function isConfigured(){
   return SUPABASE_URL && !SUPABASE_URL.includes("TU-PROYECTO") && SUPABASE_KEY && !SUPABASE_KEY.includes("TU-ANON");
@@ -421,17 +398,40 @@ function isConfigured(){
 function init(){
   if(isConfigured()){
     sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    sb.auth.onAuthStateChange((_event,session)=>{
-      currentUser = session?.user || null;
-      updateAuthUI();
-    });
-    refreshAuthUI();
+    cargarAforo().then(cargarContador);
   } else {
     document.getElementById('cfgWarn').classList.remove('hidden');
   }
   // cargar QR de pago si existen
   fetch('yape.jpg').then(r=>{ if(r.ok) document.getElementById('qrYape').innerHTML='<img src="yape.jpg" style="max-height:140px;margin:auto">'; });
+  checkValidadorSession();
+}
+
+/* ---------- Aforo (capacidad total, editable por el admin) ---------- */
+async function cargarAforo(){
+  if(!sb) return;
+  try{
+    const {data} = await sb.from('configuracion').select('aforo').eq('id',1).single();
+    if(data?.aforo) AFORO = data.aforo;
+  }catch(e){ console.warn(e); }
+}
+
+async function guardarAforo(){
+  if(!sb) return;
+  const valor = parseInt(document.getElementById('fAforo').value, 10);
+  if(!valor || valor < 1){ msg('msgAforo','Ingresa una cantidad válida.','err'); return; }
+  const {count} = await sb.from('entradas').select('id',{count:'exact',head:true});
+  const vendidas = count || 0;
+  if(valor < vendidas){
+    msg('msgAforo',`No puede ser menor a las ${vendidas} entradas ya vendidas.`,'err');
+    return;
+  }
+  const {error} = await sb.from('configuracion').update({aforo:valor}).eq('id',1);
+  if(error){ msg('msgAforo','Error al guardar: '+error.message,'err'); return; }
+  AFORO = valor;
+  msg('msgAforo','Aforo actualizado correctamente.','ok');
   cargarContador();
+  loadAdmin();
 }
 
 /* ---------- Navegación ---------- */
@@ -446,7 +446,6 @@ function goto(page){
   if(btn) btn.classList.add('active');
   window.scrollTo(0,0);
   if(page==='home') cargarContador();
-  if(page==='cuenta' && currentUser) cargarMisCompras();
 }
 
 /* ---------- Contador / estadísticas ---------- */
@@ -458,7 +457,7 @@ async function cargarContador(){
     const util = ents?.filter(e=>e.estado==='UTILIZADA').length||0;
     document.getElementById('cVendidas').textContent = vend;
     document.getElementById('cUtilizadas').textContent = util;
-    document.getElementById('cDisponibles').textContent = AFORO - vend;
+    document.getElementById('cDisponibles').textContent = Math.max(0, AFORO - vend);
   }catch(e){ console.warn(e); }
 }
 
@@ -469,7 +468,6 @@ function calcTotal(){
 }
 function msg(id,txt,tipo){ document.getElementById(id).innerHTML=`<div class="alert ${tipo}">${txt}</div>`; }
 
-/* ---------- Cuenta / Autenticación ---------- */
 function togglePasswordField(inputId,btnId){
   const inp=document.getElementById(inputId);
   const btn=document.getElementById(btnId);
@@ -477,105 +475,8 @@ function togglePasswordField(inputId,btnId){
   else{ inp.type='password'; btn.textContent='👁️'; }
 }
 
-async function refreshAuthUI(){
-  if(!sb) return;
-  const {data:{session}}=await sb.auth.getSession();
-  currentUser=session?.user||null;
-  updateAuthUI();
-}
-
-function updateAuthUI(){
-  const logueado=!!currentUser;
-  document.getElementById('authBox').classList.toggle('hidden',logueado);
-  document.getElementById('cuentaPanel').classList.toggle('hidden',!logueado);
-  document.getElementById('comprarLoginRequired').classList.toggle('hidden',logueado);
-  document.getElementById('comprarForm').classList.toggle('hidden',!logueado);
-  const nav=document.getElementById('navCuenta');
-  if(logueado){
-    nav.textContent='👤 '+currentUser.email;
-    document.getElementById('cuentaEmail').textContent=currentUser.email;
-    document.getElementById('fMail').value=currentUser.email;
-    cargarMisCompras();
-  }else{
-    nav.textContent='Mi Cuenta';
-  }
-}
-
-function showAuthTab(tab){
-  document.getElementById('loginForm').classList.toggle('hidden',tab!=='login');
-  document.getElementById('registerForm').classList.toggle('hidden',tab!=='register');
-  document.getElementById('tabLogin').className='btn sm'+(tab==='login'?'':' sec');
-  document.getElementById('tabRegister').className='btn sm'+(tab==='register'?'':' sec');
-  document.getElementById('msgAuth').innerHTML='';
-}
-
-async function registrarse(){
-  if(!sb) return;
-  const email=document.getElementById('regEmail').value.trim();
-  const pass=document.getElementById('regPass').value;
-  const pass2=document.getElementById('regPass2').value;
-  if(!email||!pass){ msg('msgAuth','Completa correo y contraseña.','err'); return; }
-  if(pass.length<6){ msg('msgAuth','La contraseña debe tener al menos 6 caracteres.','warn'); return; }
-  if(pass!==pass2){ msg('msgAuth','Las contraseñas no coinciden.','warn'); return; }
-  const {data,error}=await sb.auth.signUp({email,password:pass});
-  if(error){ msg('msgAuth','Error: '+error.message,'err'); return; }
-  if(data.session){
-    msg('msgAuth','✅ Cuenta creada. ¡Bienvenido!','ok');
-  }else{
-    msg('msgAuth','✅ Cuenta creada. Revisa tu correo para confirmar tu cuenta y luego inicia sesión.','ok');
-  }
-}
-
-async function iniciarSesion(){
-  if(!sb) return;
-  const email=document.getElementById('loginEmail').value.trim();
-  const pass=document.getElementById('loginPass').value;
-  if(!email||!pass){ msg('msgAuth','Completa correo y contraseña.','err'); return; }
-  const {error}=await sb.auth.signInWithPassword({email,password:pass});
-  if(error){ msg('msgAuth','Error: '+error.message,'err'); return; }
-  msg('msgAuth','✅ Sesión iniciada.','ok');
-}
-
-async function logout(){
-  if(!sb) return;
-  await sb.auth.signOut();
-}
-
-async function cargarMisCompras(){
-  if(!sb||!currentUser) return;
-  const area=document.getElementById('misComprasArea');
-  area.innerHTML='<p class="muted">Cargando...</p>';
-  const {data}=await sb.from('compradores').select('*').eq('user_id',currentUser.id).order('created_at',{ascending:false});
-  const compras=data||[];
-  if(!compras.length){ area.innerHTML='<p class="muted">Aún no tienes compras registradas.</p>'; return; }
-  area.innerHTML='';
-  for(const c of compras){
-    const bcls=c.estado==='APROBADO'?'b-aprob':c.estado==='RECHAZADO'?'b-rech':'b-pend';
-    const div=document.createElement('div'); div.className='card';
-    div.innerHTML=`
-      <div class="toolbar" style="justify-content:space-between;align-items:center">
-        <div><span class="badge ${bcls}">${c.estado}</span>
-          <b style="margin-left:8px">${c.cantidad} entrada${c.cantidad>1?'s':''}</b> · S/ ${(+c.total).toFixed(2)}</div>
-        <small class="muted">${new Date(c.created_at).toLocaleDateString('es-PE')}</small>
-      </div>
-      ${c.estado==='PENDIENTE'?'<p class="muted">Tu pago está siendo verificado. Vuelve pronto para ver tus entradas.</p>':''}
-      ${c.estado==='RECHAZADO'?'<p class="muted">Este pago fue rechazado. Si crees que es un error, contáctanos.</p>':''}
-      <div class="ticketsMis" style="margin-top:8px"></div>
-      ${c.estado==='APROBADO'?'<div class="center" style="margin-top:10px"><button class="btn sm blue" data-pdf>📄 Descargar PDF</button></div>':''}
-    `;
-    area.appendChild(div);
-    if(c.estado==='APROBADO'){
-      const {data:ents}=await sb.from('entradas').select('*').eq('comprador_id',c.id).order('numero');
-      const entradas=ents||[];
-      renderTickets(entradas,div.querySelector('.ticketsMis'));
-      div.querySelector('[data-pdf]').onclick=()=>{ compradorActual=c; entradasActuales=entradas; descargarPDF(); };
-    }
-  }
-}
-
 async function comprar(){
   if(!sb){ msg('msgComprar','Base de datos no configurada (revisa config.js).','err'); return; }
-  if(!currentUser){ msg('msgComprar','Debes iniciar sesión para comprar.','err'); return; }
   const nombre=document.getElementById('fNombre').value.trim();
   const dni=document.getElementById('fDni').value.trim();
   const cel=document.getElementById('fCel').value.trim();
@@ -597,15 +498,13 @@ async function comprar(){
     if(!up.error){ url=sb.storage.from('comprobantes').getPublicUrl(path).data.publicUrl; }
 
     const {error}=await sb.from('compradores').insert({
-      user_id:currentUser.id,
       nombre,dni,celular:cel,correo:mail,cantidad:cant,
       total:cant*PRECIO,comprobante_url:url,metodo_pago:metodo,estado:'PENDIENTE'
     });
     if(error) throw error;
-    msg('msgComprar','✅ Compra registrada. Tu pago está <b>PENDIENTE DE VERIFICACIÓN</b>. Podrás ver tus entradas en "Mi Cuenta" cuando sea aprobado.','ok');
-    ['fNombre','fDni','fCel'].forEach(i=>document.getElementById(i).value='');
+    msg('msgComprar','✅ Compra registrada. Tu pago está <b>PENDIENTE DE VERIFICACIÓN</b>. Te contactaremos por WhatsApp o correo cuando sea aprobado y recibas tus entradas.','ok');
+    ['fNombre','fDni','fCel','fMail'].forEach(i=>document.getElementById(i).value='');
     document.getElementById('fComprob').value='';
-    cargarMisCompras();
   }catch(e){ msg('msgComprar','Error: '+e.message,'err'); }
   btn.disabled=false; btn.textContent='Registrar compra';
 }
@@ -630,8 +529,97 @@ async function loadAdmin(){
   const recau=compradores.filter(c=>c.estado==='APROBADO').reduce((a,c)=>a+ +c.total,0);
   document.getElementById('sVend').textContent=vend;
   document.getElementById('sUtil').textContent=util;
-  document.getElementById('sDisp').textContent=AFORO-vend;
+  document.getElementById('sDisp').textContent=Math.max(0, AFORO-vend);
+  document.getElementById('fAforo').value=AFORO;
   document.getElementById('sRecau').textContent='S/ '+recau.toFixed(0);
+  cargarValidadores();
+}
+
+/* ---------- Validadores de QR (acceso a "Validar QR") ---------- */
+let validadores = [];
+
+async function cargarValidadores(){
+  if(!sb) return;
+  const {data}=await sb.from('validadores').select('*').order('created_at',{ascending:true});
+  validadores=data||[];
+  renderValidadores();
+}
+
+function renderValidadores(){
+  const tb=document.querySelector('#tblValidadores tbody'); if(!tb) return;
+  tb.innerHTML='';
+  validadores.forEach(v=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td>${v.nombre}</td>
+      <td style="font-family:monospace">${v.clave}</td>
+      <td><span class="badge ${v.activo?'b-aprob':'b-rech'}">${v.activo?'ACTIVO':'INACTIVO'}</span></td>
+      <td></td>`;
+    const acc=tr.lastElementChild;
+    const t=document.createElement('button'); t.className='btn sm sec'; t.textContent=v.activo?'Desactivar':'Activar';
+    t.onclick=()=>toggleValidador(v.id,!v.activo);
+    const d=document.createElement('button'); d.className='btn sm'; d.style.marginLeft='4px'; d.style.background='#777'; d.textContent='Eliminar';
+    d.onclick=()=>eliminarValidador(v.id);
+    acc.append(t,d);
+    tb.appendChild(tr);
+  });
+}
+
+async function agregarValidador(){
+  const nombre=document.getElementById('fValNombre').value.trim();
+  let clave=document.getElementById('fValClave').value.trim().toUpperCase();
+  if(!nombre){ msg('msgValidador','Ingresa el nombre del validador.','err'); return; }
+  if(!clave){ clave='V'+Math.random().toString(36).slice(2,8).toUpperCase(); }
+  const {error}=await sb.from('validadores').insert({nombre,clave,activo:true});
+  if(error){ msg('msgValidador','Error: '+error.message,'err'); return; }
+  document.getElementById('fValNombre').value='';
+  document.getElementById('fValClave').value='';
+  msg('msgValidador',`✅ Validador agregado. Código de acceso: <b>${clave}</b>`,'ok');
+  cargarValidadores();
+}
+
+async function toggleValidador(id,activo){
+  await sb.from('validadores').update({activo}).eq('id',id);
+  cargarValidadores();
+}
+
+async function eliminarValidador(id){
+  if(!confirm('¿Eliminar este validador? Su código dejará de funcionar.')) return;
+  await sb.from('validadores').delete().eq('id',id);
+  cargarValidadores();
+}
+
+/* ---------- Acceso a "Validar QR" ---------- */
+function checkValidadorSession(){
+  const nombre=sessionStorage.getItem('validadorNombre');
+  if(nombre){
+    document.getElementById('validarLogin').classList.add('hidden');
+    document.getElementById('validarPanel').classList.remove('hidden');
+    document.getElementById('validadorNombre').textContent=nombre;
+  }
+}
+
+async function loginValidador(){
+  const code=document.getElementById('validarCodigo').value.trim();
+  if(!code){ msg('msgValidarLogin','Ingresa el código de acceso.','err'); return; }
+  if(code===ADMIN_PASS){
+    sessionStorage.setItem('validadorNombre','Administrador');
+    checkValidadorSession();
+    return;
+  }
+  if(!sb){ msg('msgValidarLogin','Base de datos no configurada.','err'); return; }
+  const {data}=await sb.from('validadores').select('*').eq('clave',code.toUpperCase()).eq('activo',true).maybeSingle();
+  if(!data){ msg('msgValidarLogin','Código incorrecto o inactivo. Pide uno nuevo al administrador.','err'); return; }
+  sessionStorage.setItem('validadorNombre',data.nombre);
+  checkValidadorSession();
+}
+
+function logoutValidador(){
+  sessionStorage.removeItem('validadorNombre');
+  document.getElementById('validarLogin').classList.remove('hidden');
+  document.getElementById('validarPanel').classList.add('hidden');
+  document.getElementById('validarCodigo').value='';
+  document.getElementById('msgValidarLogin').innerHTML='';
 }
 
 function renderCompradores(){
