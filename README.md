@@ -24,6 +24,7 @@ Aforo: hasta **500 asistentes** · Compras múltiples por persona · Validación
 2. Cuando esté listo, ve a **SQL Editor → New query**.
 3. Copia y pega TODO el contenido de `supabase_schema.sql` y presiona **Run**.
    Esto crea las tablas (compradores, entradas, validaciones), las funciones y el bucket de comprobantes.
+4. (Recomendado) En **Authentication → Providers → Email**, desactiva **"Confirm email"** para que al crear una cuenta el usuario quede con sesión iniciada de inmediato (sin tener que confirmar por correo).
 
 ### 2) Obtener tus credenciales
 En Supabase: **Project Settings → API**. Copia:
@@ -63,7 +64,9 @@ Se muestra automáticamente en la sección de pago. Ajusta también el número q
 
 **Página principal** → muestra el evento, contador de entradas y botón de compra.
 
-**Comprar** → el cliente llena sus datos, elige cantidad (el total se calcula solo), escanea el QR de Yape/Plin, sube su captura y registra la compra (queda **PENDIENTE**).
+**Mi Cuenta** → el cliente crea una cuenta (correo + contraseña) o inicia sesión. Es el paso obligatorio antes de poder comprar: así sus compras quedan guardadas en su cuenta y puede volver más tarde a ver el estado de sus pagos y, cuando estén **APROBADOS**, sus entradas con código QR (con opción de descargar el PDF).
+
+**Comprar** → solo disponible con sesión iniciada. El cliente llena sus datos, elige cantidad (el total se calcula solo), escanea el QR de Yape, sube su captura y registra la compra (queda **PENDIENTE**, asociada a su cuenta).
 
 **Admin** (con la clave configurada en `ADMIN_PASS`) →
 - Ve la lista de compradores, busca por nombre/DNI/teléfono.

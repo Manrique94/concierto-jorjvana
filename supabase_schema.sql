@@ -13,6 +13,7 @@ create extension if not exists "pgcrypto";
 -- ------------------------------------------------------------
 create table if not exists public.compradores (
   id              uuid primary key default gen_random_uuid(),
+  user_id         uuid references auth.users(id) on delete set null,
   nombre          text not null,
   dni             text not null,
   celular         text not null,
@@ -26,6 +27,8 @@ create table if not exists public.compradores (
   fecha_revision  timestamptz,
   created_at      timestamptz not null default now()
 );
+
+create index if not exists idx_compradores_user on public.compradores(user_id);
 
 -- ------------------------------------------------------------
 -- TABLA: entradas
@@ -154,7 +157,9 @@ alter table public.validaciones enable row level security;
 -- Política permisiva (clave anónima). Para producción se recomienda
 -- restringir el panel admin con autenticación. Aquí se permite operar
 -- con la anon key para simplificar el despliegue.
-create policy "anon compradores"  on public.compradores  for all using (true) with check (true);
+create policy "ver compradores"        on public.compradores for select using (true);
+create policy "crear compra propia"    on public.compradores for insert with check (auth.uid() = user_id);
+create policy "actualizar compradores" on public.compradores for update using (true) with check (true);
 create policy "anon entradas"     on public.entradas     for all using (true) with check (true);
 create policy "anon validaciones" on public.validaciones for all using (true) with check (true);
 

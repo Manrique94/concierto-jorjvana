@@ -141,6 +141,7 @@
     <div class="logo">CONCIERTO ACÚSTICO <b>JORJVANA</b></div>
     <nav>
       <button data-page="home" class="active">Inicio</button>
+      <button data-page="cuenta" id="navCuenta">Mi Cuenta</button>
       <button data-page="comprar">Comprar</button>
       <button data-page="validar">Validar QR</button>
       <button data-page="admin">Admin</button>
@@ -177,56 +178,126 @@
     </div>
   </section>
 
+  <!-- ===================== CUENTA ===================== -->
+  <section id="cuenta" class="page">
+    <div class="sec-hero">
+      <img src="concierto.jpg" alt="JORJVANA">
+      <div class="ov"><h1>Mi <b>cuenta</b></h1><p>Crea tu cuenta o inicia sesión para comprar tus entradas y verlas cuando sean aprobadas</p></div>
+    </div>
+
+    <div id="authBox" class="card">
+      <div class="toolbar">
+        <button class="btn sm" id="tabLogin" onclick="showAuthTab('login')">Iniciar sesión</button>
+        <button class="btn sm sec" id="tabRegister" onclick="showAuthTab('register')">Crear cuenta</button>
+      </div>
+
+      <div id="loginForm">
+        <h2>Iniciar sesión</h2>
+        <label>Correo</label>
+        <input id="loginEmail" type="email" placeholder="correo@ejemplo.com">
+        <label>Contraseña</label>
+        <div style="position:relative">
+          <input type="password" id="loginPass" placeholder="Tu contraseña" style="padding-right:42px">
+          <button type="button" id="toggleLoginPass" onclick="togglePasswordField('loginPass','toggleLoginPass')" aria-label="Mostrar/ocultar clave"
+            style="position:absolute;right:4px;top:50%;transform:translateY(-50%);background:transparent;border:none;cursor:pointer;font-size:18px;padding:6px;line-height:1">👁️</button>
+        </div>
+        <div class="center" style="margin-top:16px"><button class="btn" onclick="iniciarSesion()">Ingresar</button></div>
+      </div>
+
+      <div id="registerForm" class="hidden">
+        <h2>Crear cuenta</h2>
+        <label>Correo</label>
+        <input id="regEmail" type="email" placeholder="correo@ejemplo.com">
+        <label>Contraseña</label>
+        <div style="position:relative">
+          <input type="password" id="regPass" placeholder="Mínimo 6 caracteres" style="padding-right:42px">
+          <button type="button" id="toggleRegPass" onclick="togglePasswordField('regPass','toggleRegPass')" aria-label="Mostrar/ocultar clave"
+            style="position:absolute;right:4px;top:50%;transform:translateY(-50%);background:transparent;border:none;cursor:pointer;font-size:18px;padding:6px;line-height:1">👁️</button>
+        </div>
+        <label>Confirmar contraseña</label>
+        <div style="position:relative">
+          <input type="password" id="regPass2" placeholder="Repite tu contraseña" style="padding-right:42px">
+          <button type="button" id="toggleRegPass2" onclick="togglePasswordField('regPass2','toggleRegPass2')" aria-label="Mostrar/ocultar clave"
+            style="position:absolute;right:4px;top:50%;transform:translateY(-50%);background:transparent;border:none;cursor:pointer;font-size:18px;padding:6px;line-height:1">👁️</button>
+        </div>
+        <div class="center" style="margin-top:16px"><button class="btn" onclick="registrarse()">Crear cuenta</button></div>
+      </div>
+
+      <div id="msgAuth"></div>
+    </div>
+
+    <div id="cuentaPanel" class="hidden">
+      <div class="card">
+        <h2>👤 Mi cuenta</h2>
+        <p>Conectado como <b id="cuentaEmail"></b></p>
+        <div style="margin-top:14px"><button class="btn sm sec" onclick="logout()">Cerrar sesión</button></div>
+      </div>
+      <div class="card">
+        <h2>🎫 Mis compras y entradas</h2>
+        <div id="misComprasArea"><p class="muted">Cargando...</p></div>
+      </div>
+    </div>
+  </section>
+
   <!-- ===================== COMPRAR ===================== -->
   <section id="comprar" class="page">
     <div class="sec-hero">
       <img src="concierto.jpg" alt="JORJVANA">
       <div class="ov"><h1>Compra tus <b>entradas</b></h1><p>17 Julio 2026 · 7:00 PM · C.C. Vida Abundante · S/ 10.00</p></div>
     </div>
-    <div class="card">
-      <h2>1 · Datos del comprador</h2>
-      <div class="row">
-        <div><label>Nombre completo *</label><input id="fNombre" placeholder="Ej: Juan Pérez"></div>
-        <div><label>DNI *</label><input id="fDni" maxlength="8" placeholder="12345678"></div>
-      </div>
-      <div class="row">
-        <div><label>Celular *</label><input id="fCel" placeholder="987654321"></div>
-        <div><label>Correo (opcional)</label><input id="fMail" type="email" placeholder="correo@ejemplo.com"></div>
-      </div>
-      <div class="row">
-        <div>
-          <label>Cantidad de entradas *</label>
-          <select id="fCant" onchange="calcTotal()">
-            <option value="1">1 entrada</option><option value="2">2 entradas</option>
-            <option value="3">3 entradas</option><option value="4">4 entradas</option>
-            <option value="5">5 entradas</option><option value="6">6 entradas</option>
-            <option value="8">8 entradas</option><option value="10">10 entradas</option>
-          </select>
-        </div>
-      </div>
-      <div class="total-box"><span>Total a pagar</span><b id="fTotal">S/ 10.00</b></div>
+
+    <div id="comprarLoginRequired" class="card hidden">
+      <h2>Inicia sesión para comprar</h2>
+      <p class="muted">Debes crear una cuenta o iniciar sesión antes de registrar tu compra, así tus entradas quedan guardadas en tu cuenta y podrás verlas cuando sean aprobadas.</p>
+      <div class="center" style="margin-top:16px"><button class="btn" onclick="goto('cuenta')">Ir a Mi Cuenta</button></div>
     </div>
 
-    <div class="card">
-      <h2>2 · Método de pago</h2>
-      <div class="pago-qr">
-        <div class="q">
-          <h4>Yape</h4>
-          <div class="ph" id="qrYape">Coloca tu QR de Yape<br>(reemplaza en /yape.jpg)</div>
-          <p class="muted" style="margin-top:8px">Nº: 987 654 321</p>
+    <div id="comprarForm">
+      <div class="card">
+        <h2>1 · Datos del comprador</h2>
+        <div class="row">
+          <div><label>Nombre completo *</label><input id="fNombre" placeholder="Ej: Juan Pérez"></div>
+          <div><label>DNI *</label><input id="fDni" maxlength="8" placeholder="12345678"></div>
         </div>
+        <div class="row">
+          <div><label>Celular *</label><input id="fCel" placeholder="987654321"></div>
+          <div><label>Correo *</label><input id="fMail" type="email" placeholder="correo@ejemplo.com"></div>
+        </div>
+        <div class="row">
+          <div>
+            <label>Cantidad de entradas *</label>
+            <select id="fCant" onchange="calcTotal()">
+              <option value="1">1 entrada</option><option value="2">2 entradas</option>
+              <option value="3">3 entradas</option><option value="4">4 entradas</option>
+              <option value="5">5 entradas</option><option value="6">6 entradas</option>
+              <option value="8">8 entradas</option><option value="10">10 entradas</option>
+            </select>
+          </div>
+        </div>
+        <div class="total-box"><span>Total a pagar</span><b id="fTotal">S/ 10.00</b></div>
       </div>
 
-      <label style="margin-top:16px">Método usado</label>
-      <select id="fMetodo"><option value="Yape">Yape</option></select>
+      <div class="card">
+        <h2>2 · Método de pago</h2>
+        <div class="pago-qr">
+          <div class="q">
+            <h4>Yape</h4>
+            <div class="ph" id="qrYape">Coloca tu QR de Yape<br>(reemplaza en /yape.jpg)</div>
+            <p class="muted" style="margin-top:8px">Nº: 987 654 321</p>
+          </div>
+        </div>
 
-      <label>Sube tu captura de pago *</label>
-      <input type="file" id="fComprob" accept="image/*">
+        <label style="margin-top:16px">Método usado</label>
+        <select id="fMetodo"><option value="Yape">Yape</option></select>
 
-      <div class="center" style="margin-top:20px">
-        <button class="btn" id="btnComprar" onclick="comprar()">Registrar compra</button>
+        <label>Sube tu captura de pago *</label>
+        <input type="file" id="fComprob" accept="image/*">
+
+        <div class="center" style="margin-top:20px">
+          <button class="btn" id="btnComprar" onclick="comprar()">Registrar compra</button>
+        </div>
+        <div id="msgComprar"></div>
       </div>
-      <div id="msgComprar"></div>
     </div>
   </section>
 
@@ -276,7 +347,7 @@
       <label>Clave de acceso</label>
       <div style="position:relative">
         <input type="password" id="adminPass" placeholder="Clave admin" style="padding-right:42px">
-        <button type="button" id="toggleAdminPass" onclick="toggleAdminPass()" aria-label="Mostrar/ocultar clave"
+        <button type="button" id="toggleAdminPass" onclick="togglePasswordField('adminPass','toggleAdminPass')" aria-label="Mostrar/ocultar clave"
           style="position:absolute;right:4px;top:50%;transform:translateY(-50%);background:transparent;border:none;cursor:pointer;font-size:18px;padding:6px;line-height:1">👁️</button>
       </div>
       <div style="margin-top:14px"><button class="btn" onclick="loginAdmin()">Ingresar</button></div>
@@ -341,6 +412,7 @@ let sb = null;
 const PRECIO = 10, AFORO = 500;
 let compradores = [], entradasActuales = [], compradorActual = null;
 let scanner = null, ultimoCodigo = null;
+let currentUser = null;
 
 function isConfigured(){
   return SUPABASE_URL && !SUPABASE_URL.includes("TU-PROYECTO") && SUPABASE_KEY && !SUPABASE_KEY.includes("TU-ANON");
@@ -349,6 +421,11 @@ function isConfigured(){
 function init(){
   if(isConfigured()){
     sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    sb.auth.onAuthStateChange((_event,session)=>{
+      currentUser = session?.user || null;
+      updateAuthUI();
+    });
+    refreshAuthUI();
   } else {
     document.getElementById('cfgWarn').classList.remove('hidden');
   }
@@ -369,6 +446,7 @@ function goto(page){
   if(btn) btn.classList.add('active');
   window.scrollTo(0,0);
   if(page==='home') cargarContador();
+  if(page==='cuenta' && currentUser) cargarMisCompras();
 }
 
 /* ---------- Contador / estadísticas ---------- */
@@ -391,8 +469,113 @@ function calcTotal(){
 }
 function msg(id,txt,tipo){ document.getElementById(id).innerHTML=`<div class="alert ${tipo}">${txt}</div>`; }
 
+/* ---------- Cuenta / Autenticación ---------- */
+function togglePasswordField(inputId,btnId){
+  const inp=document.getElementById(inputId);
+  const btn=document.getElementById(btnId);
+  if(inp.type==='password'){ inp.type='text'; btn.textContent='🙈'; }
+  else{ inp.type='password'; btn.textContent='👁️'; }
+}
+
+async function refreshAuthUI(){
+  if(!sb) return;
+  const {data:{session}}=await sb.auth.getSession();
+  currentUser=session?.user||null;
+  updateAuthUI();
+}
+
+function updateAuthUI(){
+  const logueado=!!currentUser;
+  document.getElementById('authBox').classList.toggle('hidden',logueado);
+  document.getElementById('cuentaPanel').classList.toggle('hidden',!logueado);
+  document.getElementById('comprarLoginRequired').classList.toggle('hidden',logueado);
+  document.getElementById('comprarForm').classList.toggle('hidden',!logueado);
+  const nav=document.getElementById('navCuenta');
+  if(logueado){
+    nav.textContent='👤 '+currentUser.email;
+    document.getElementById('cuentaEmail').textContent=currentUser.email;
+    document.getElementById('fMail').value=currentUser.email;
+    cargarMisCompras();
+  }else{
+    nav.textContent='Mi Cuenta';
+  }
+}
+
+function showAuthTab(tab){
+  document.getElementById('loginForm').classList.toggle('hidden',tab!=='login');
+  document.getElementById('registerForm').classList.toggle('hidden',tab!=='register');
+  document.getElementById('tabLogin').className='btn sm'+(tab==='login'?'':' sec');
+  document.getElementById('tabRegister').className='btn sm'+(tab==='register'?'':' sec');
+  document.getElementById('msgAuth').innerHTML='';
+}
+
+async function registrarse(){
+  if(!sb) return;
+  const email=document.getElementById('regEmail').value.trim();
+  const pass=document.getElementById('regPass').value;
+  const pass2=document.getElementById('regPass2').value;
+  if(!email||!pass){ msg('msgAuth','Completa correo y contraseña.','err'); return; }
+  if(pass.length<6){ msg('msgAuth','La contraseña debe tener al menos 6 caracteres.','warn'); return; }
+  if(pass!==pass2){ msg('msgAuth','Las contraseñas no coinciden.','warn'); return; }
+  const {data,error}=await sb.auth.signUp({email,password:pass});
+  if(error){ msg('msgAuth','Error: '+error.message,'err'); return; }
+  if(data.session){
+    msg('msgAuth','✅ Cuenta creada. ¡Bienvenido!','ok');
+  }else{
+    msg('msgAuth','✅ Cuenta creada. Revisa tu correo para confirmar tu cuenta y luego inicia sesión.','ok');
+  }
+}
+
+async function iniciarSesion(){
+  if(!sb) return;
+  const email=document.getElementById('loginEmail').value.trim();
+  const pass=document.getElementById('loginPass').value;
+  if(!email||!pass){ msg('msgAuth','Completa correo y contraseña.','err'); return; }
+  const {error}=await sb.auth.signInWithPassword({email,password:pass});
+  if(error){ msg('msgAuth','Error: '+error.message,'err'); return; }
+  msg('msgAuth','✅ Sesión iniciada.','ok');
+}
+
+async function logout(){
+  if(!sb) return;
+  await sb.auth.signOut();
+}
+
+async function cargarMisCompras(){
+  if(!sb||!currentUser) return;
+  const area=document.getElementById('misComprasArea');
+  area.innerHTML='<p class="muted">Cargando...</p>';
+  const {data}=await sb.from('compradores').select('*').eq('user_id',currentUser.id).order('created_at',{ascending:false});
+  const compras=data||[];
+  if(!compras.length){ area.innerHTML='<p class="muted">Aún no tienes compras registradas.</p>'; return; }
+  area.innerHTML='';
+  for(const c of compras){
+    const bcls=c.estado==='APROBADO'?'b-aprob':c.estado==='RECHAZADO'?'b-rech':'b-pend';
+    const div=document.createElement('div'); div.className='card';
+    div.innerHTML=`
+      <div class="toolbar" style="justify-content:space-between;align-items:center">
+        <div><span class="badge ${bcls}">${c.estado}</span>
+          <b style="margin-left:8px">${c.cantidad} entrada${c.cantidad>1?'s':''}</b> · S/ ${(+c.total).toFixed(2)}</div>
+        <small class="muted">${new Date(c.created_at).toLocaleDateString('es-PE')}</small>
+      </div>
+      ${c.estado==='PENDIENTE'?'<p class="muted">Tu pago está siendo verificado. Vuelve pronto para ver tus entradas.</p>':''}
+      ${c.estado==='RECHAZADO'?'<p class="muted">Este pago fue rechazado. Si crees que es un error, contáctanos.</p>':''}
+      <div class="ticketsMis" style="margin-top:8px"></div>
+      ${c.estado==='APROBADO'?'<div class="center" style="margin-top:10px"><button class="btn sm blue" data-pdf>📄 Descargar PDF</button></div>':''}
+    `;
+    area.appendChild(div);
+    if(c.estado==='APROBADO'){
+      const {data:ents}=await sb.from('entradas').select('*').eq('comprador_id',c.id).order('numero');
+      const entradas=ents||[];
+      renderTickets(entradas,div.querySelector('.ticketsMis'));
+      div.querySelector('[data-pdf]').onclick=()=>{ compradorActual=c; entradasActuales=entradas; descargarPDF(); };
+    }
+  }
+}
+
 async function comprar(){
   if(!sb){ msg('msgComprar','Base de datos no configurada (revisa config.js).','err'); return; }
+  if(!currentUser){ msg('msgComprar','Debes iniciar sesión para comprar.','err'); return; }
   const nombre=document.getElementById('fNombre').value.trim();
   const dni=document.getElementById('fDni').value.trim();
   const cel=document.getElementById('fCel').value.trim();
@@ -401,7 +584,7 @@ async function comprar(){
   const metodo=document.getElementById('fMetodo').value;
   const file=document.getElementById('fComprob').files[0];
 
-  if(!nombre||!dni||!cel){ msg('msgComprar','Completa nombre, DNI y celular.','err'); return; }
+  if(!nombre||!dni||!cel||!mail){ msg('msgComprar','Completa nombre, DNI, celular y correo.','err'); return; }
   if(dni.length!==8){ msg('msgComprar','El DNI debe tener 8 dígitos.','warn'); return; }
   if(!file){ msg('msgComprar','Sube la captura de tu pago.','warn'); return; }
 
@@ -414,24 +597,20 @@ async function comprar(){
     if(!up.error){ url=sb.storage.from('comprobantes').getPublicUrl(path).data.publicUrl; }
 
     const {error}=await sb.from('compradores').insert({
-      nombre,dni,celular:cel,correo:mail||null,cantidad:cant,
+      user_id:currentUser.id,
+      nombre,dni,celular:cel,correo:mail,cantidad:cant,
       total:cant*PRECIO,comprobante_url:url,metodo_pago:metodo,estado:'PENDIENTE'
     });
     if(error) throw error;
-    msg('msgComprar','✅ Compra registrada. Tu pago está <b>PENDIENTE DE VERIFICACIÓN</b>. Recibirás tus entradas cuando sea aprobado.','ok');
-    ['fNombre','fDni','fCel','fMail'].forEach(i=>document.getElementById(i).value='');
+    msg('msgComprar','✅ Compra registrada. Tu pago está <b>PENDIENTE DE VERIFICACIÓN</b>. Podrás ver tus entradas en "Mi Cuenta" cuando sea aprobado.','ok');
+    ['fNombre','fDni','fCel'].forEach(i=>document.getElementById(i).value='');
     document.getElementById('fComprob').value='';
+    cargarMisCompras();
   }catch(e){ msg('msgComprar','Error: '+e.message,'err'); }
   btn.disabled=false; btn.textContent='Registrar compra';
 }
 
 /* ---------- Admin ---------- */
-function toggleAdminPass(){
-  const inp=document.getElementById('adminPass');
-  const btn=document.getElementById('toggleAdminPass');
-  if(inp.type==='password'){ inp.type='text'; btn.textContent='🙈'; }
-  else{ inp.type='password'; btn.textContent='👁️'; }
-}
 function loginAdmin(){
   if(document.getElementById('adminPass').value===ADMIN_PASS){
     document.getElementById('adminLogin').classList.add('hidden');
@@ -494,14 +673,9 @@ async function rechazar(id){
   loadAdmin();
 }
 
-async function verEntradas(c){
-  compradorActual=c;
-  const {data}=await sb.from('entradas').select('*').eq('comprador_id',c.id).order('numero');
-  entradasActuales=data||[];
-  document.getElementById('entradasCard').style.display='block';
-  document.getElementById('entradasDe').textContent='· '+c.nombre;
-  const area=document.getElementById('ticketsArea'); area.innerHTML='';
-  for(const e of entradasActuales){
+function renderTickets(entradas,areaEl){
+  areaEl.innerHTML='';
+  for(const e of entradas){
     const div=document.createElement('div'); div.className='ticket';
     div.innerHTML=`<div class="left">
         <h3>JORJVANA</h3>
@@ -512,9 +686,18 @@ async function verEntradas(c){
         <p class="code">${e.codigo}</p>
       </div>
       <div class="right"><canvas id="qr_${e.codigo}"></canvas><div class="code">${e.codigo}</div></div>`;
-    area.appendChild(div);
+    areaEl.appendChild(div);
     QRCode.toCanvas(document.getElementById('qr_'+e.codigo), e.codigo, {width:140});
   }
+}
+
+async function verEntradas(c){
+  compradorActual=c;
+  const {data}=await sb.from('entradas').select('*').eq('comprador_id',c.id).order('numero');
+  entradasActuales=data||[];
+  document.getElementById('entradasCard').style.display='block';
+  document.getElementById('entradasDe').textContent='· '+c.nombre;
+  renderTickets(entradasActuales,document.getElementById('ticketsArea'));
   document.getElementById('entradasCard').scrollIntoView({behavior:'smooth'});
 }
 
