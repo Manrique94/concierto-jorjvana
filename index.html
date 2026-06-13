@@ -89,8 +89,7 @@
   .total-box{background:#000;color:#fff;border-radius:12px;padding:16px;margin-top:16px;display:flex;justify-content:space-between;align-items:center}
   .total-box b{font-size:28px;color:#fff}
 
-  .pago-qr{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
-  @media(max-width:560px){.pago-qr{grid-template-columns:1fr}}
+  .pago-qr{display:grid;grid-template-columns:1fr;max-width:320px;margin:14px auto 0}
   .pago-qr .q{background:var(--gris);border-radius:12px;padding:16px;text-align:center}
   .pago-qr .q h4{margin-bottom:8px}
   .pago-qr .q .ph{height:140px;display:flex;align-items:center;justify-content:center;background:#fff;border:2px dashed var(--grisb);border-radius:10px;color:#999;font-size:13px}
@@ -213,18 +212,13 @@
       <div class="pago-qr">
         <div class="q">
           <h4>Yape</h4>
-          <div class="ph" id="qrYape">Coloca tu QR de Yape<br>(reemplaza en /yape.png)</div>
-          <p class="muted" style="margin-top:8px">Nº: 987 654 321</p>
-        </div>
-        <div class="q">
-          <h4>Plin</h4>
-          <div class="ph" id="qrPlin">Coloca tu QR de Plin<br>(reemplaza en /plin.png)</div>
+          <div class="ph" id="qrYape">Coloca tu QR de Yape<br>(reemplaza en /yape.jpg)</div>
           <p class="muted" style="margin-top:8px">Nº: 987 654 321</p>
         </div>
       </div>
 
       <label style="margin-top:16px">Método usado</label>
-      <select id="fMetodo"><option value="Yape">Yape</option><option value="Plin">Plin</option></select>
+      <select id="fMetodo"><option value="Yape">Yape</option></select>
 
       <label>Sube tu captura de pago *</label>
       <input type="file" id="fComprob" accept="image/*">
@@ -280,7 +274,11 @@
     <div id="adminLogin" class="card">
       <h2>Panel de administración</h2>
       <label>Clave de acceso</label>
-      <input type="password" id="adminPass" placeholder="Clave admin">
+      <div style="position:relative">
+        <input type="password" id="adminPass" placeholder="Clave admin" style="padding-right:42px">
+        <button type="button" id="toggleAdminPass" onclick="toggleAdminPass()" aria-label="Mostrar/ocultar clave"
+          style="position:absolute;right:4px;top:50%;transform:translateY(-50%);background:transparent;border:none;cursor:pointer;font-size:18px;padding:6px;line-height:1">👁️</button>
+      </div>
       <div style="margin-top:14px"><button class="btn" onclick="loginAdmin()">Ingresar</button></div>
       <div id="msgLogin"></div>
     </div>
@@ -355,8 +353,7 @@ function init(){
     document.getElementById('cfgWarn').classList.remove('hidden');
   }
   // cargar QR de pago si existen
-  fetch('yape.png').then(r=>{ if(r.ok) document.getElementById('qrYape').innerHTML='<img src="yape.png" style="max-height:140px;margin:auto">'; });
-  fetch('plin.png').then(r=>{ if(r.ok) document.getElementById('qrPlin').innerHTML='<img src="plin.png" style="max-height:140px;margin:auto">'; });
+  fetch('yape.jpg').then(r=>{ if(r.ok) document.getElementById('qrYape').innerHTML='<img src="yape.jpg" style="max-height:140px;margin:auto">'; });
   cargarContador();
 }
 
@@ -429,6 +426,12 @@ async function comprar(){
 }
 
 /* ---------- Admin ---------- */
+function toggleAdminPass(){
+  const inp=document.getElementById('adminPass');
+  const btn=document.getElementById('toggleAdminPass');
+  if(inp.type==='password'){ inp.type='text'; btn.textContent='🙈'; }
+  else{ inp.type='password'; btn.textContent='👁️'; }
+}
 function loginAdmin(){
   if(document.getElementById('adminPass').value===ADMIN_PASS){
     document.getElementById('adminLogin').classList.add('hidden');

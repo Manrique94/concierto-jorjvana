@@ -13,7 +13,7 @@ Aforo: hasta **500 asistentes** · Compras múltiples por persona · Validación
 | `supabase_schema.sql` | Script para crear la base de datos |
 | `concierto.jpg` | Imagen del evento (ya incluida) |
 | `vercel.json` | Configuración de hosting (Vercel) |
-| `yape.png` / `plin.png` | *(Opcional)* Coloca aquí tus QR de pago |
+| `yape.jpg` | QR de pago de Yape |
 
 ---
 
@@ -40,9 +40,9 @@ window.ADMIN_PASS   = "jorjvana2026";        // cambia esta clave
 window.WHATSAPP_ADMIN = "51987654321";
 ```
 
-### 4) (Opcional) Tus QR de pago
-Coloca dos imágenes llamadas **`yape.png`** y **`plin.png`** junto al `index.html`.
-Se mostrarán automáticamente en la sección de pago. Ajusta también los números que aparecen en el HTML (busca "987 654 321").
+### 4) Tu QR de pago
+Coloca la imagen **`yape.jpg`** junto al `index.html` (ya incluida).
+Se muestra automáticamente en la sección de pago. Ajusta también el número que aparece en el HTML (busca "987 654 321").
 
 ### 5) Publicar en Vercel
 **Opción A — Vercel CLI (rápido, sin GitHub):**
