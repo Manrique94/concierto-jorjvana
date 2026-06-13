@@ -65,7 +65,7 @@ Se mostrarán automáticamente en la sección de pago. Ajusta también los núme
 
 **Comprar** → el cliente llena sus datos, elige cantidad (el total se calcula solo), escanea el QR de Yape/Plin, sube su captura y registra la compra (queda **PENDIENTE**).
 
-**Admin** (clave `jorjvana2026`) →
+**Admin** (con la clave configurada en `ADMIN_PASS`) →
 - Ve la lista de compradores, busca por nombre/DNI/teléfono.
 - **Aprobar** un pago genera automáticamente las entradas con código y QR únicos (ej. `JORJ-2026-A8F7K2`).
 - Descarga las entradas en **PDF**, o envíalas por **WhatsApp** / **correo**.
