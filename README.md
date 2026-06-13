@@ -14,6 +14,7 @@ Aforo: hasta **500 asistentes** · Compras múltiples por persona · Validación
 | `concierto.jpg` | Imagen del evento (ya incluida) |
 | `vercel.json` | Configuración de hosting (Vercel) |
 | `yape.jpg` | QR de pago de Yape |
+| `api/enviar-entradas.js` | Función serverless (Vercel) que envía el PDF de entradas por correo |
 
 ---
 
@@ -56,6 +57,18 @@ Se muestra automáticamente en la sección de pago. Ajusta también el número q
 1. Sube esta carpeta a un repositorio en GitHub.
 2. Entra a **https://vercel.com** → **Add New → Project** → importa el repositorio.
 3. Déjalo como proyecto estático (sin build command, *Output Directory* = `.`) y haz click en **Deploy**.
+
+### 6) Envío de entradas por correo (opcional)
+El botón **✉ Enviar por correo** del panel admin envía el PDF de entradas al correo del comprador usando tu cuenta de Gmail (`davidalexandermanriquevilchez@gmail.com`). Para activarlo:
+
+1. Activa la **verificación en 2 pasos** en esa cuenta de Gmail: **https://myaccount.google.com/security**.
+2. Genera una **contraseña de aplicación**: **https://myaccount.google.com/apppasswords** (elige "Correo" → "Otra", ej. "JORJVANA").
+3. En Vercel: **Project → Settings → Environment Variables**, agrega:
+   - `GMAIL_USER` = tu correo de Gmail (ej. `davidalexandermanriquevilchez@gmail.com`)
+   - `GMAIL_APP_PASSWORD` = la contraseña de aplicación generada (16 caracteres, sin espacios)
+4. Vuelve a desplegar (**Redeploy**) para que los cambios surtan efecto.
+
+Si estas variables no están configuradas, el botón mostrará un error indicando que el envío de correos no está habilitado.
 
 ---
 

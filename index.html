@@ -8,7 +8,10 @@
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <!-- QR -->
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script type="module">
+  import QRCode from "https://cdn.jsdelivr.net/npm/qrcode@1.5.3/+esm";
+  window.QRCode = QRCode;
+</script>
 <!-- Escáner QR -->
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <!-- PDF -->
@@ -366,6 +369,7 @@
           <button class="btn sm green" onclick="enviarWhatsApp()">📲 Enviar por WhatsApp</button>
           <button class="btn sm amber" onclick="enviarCorreo()">✉ Enviar por correo</button>
         </div>
+        <div id="msgEntradas"></div>
         <div id="ticketsArea"></div>
       </div>
     </div>
@@ -702,7 +706,7 @@ function exportExcel(){
 }
 
 /* ---------- PDF de entradas ---------- */
-async function descargarPDF(){
+async function generarPDF(){
   const {jsPDF}=window.jspdf;
   const doc=new jsPDF();
   for(let i=0;i<entradasActuales.length;i++){
@@ -725,7 +729,21 @@ async function descargarPDF(){
     doc.setFontSize(9); doc.setFont(undefined,'normal'); doc.setTextColor(120,120,120);
     doc.text('Presenta este código QR en el ingreso. Válido para una sola persona.',105,185,{align:'center'});
   }
+  return doc;
+}
+
+async function descargarPDF(){
+  const doc=await generarPDF();
   doc.save(`entradas_${compradorActual.nombre.replace(/\s/g,'_')}.pdf`);
+}
+
+function blobToBase64(blob){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onload=()=>resolve(reader.result.split(',')[1]);
+    reader.onerror=reject;
+    reader.readAsDataURL(blob);
+  });
 }
 
 function enviarWhatsApp(){
@@ -734,12 +752,28 @@ function enviarWhatsApp(){
   const num=compradorActual.celular.replace(/\D/g,'');
   window.open(`https://wa.me/51${num}?text=${txt}`,'_blank');
 }
-function enviarCorreo(){
+async function enviarCorreo(){
   if(!compradorActual.correo){ alert('Este comprador no tiene correo registrado.'); return; }
-  const codes=entradasActuales.map(e=>e.codigo).join(', ');
-  const sub=encodeURIComponent('Tus entradas - Concierto JORJVANA');
-  const body=encodeURIComponent(`Hola ${compradorActual.nombre},\n\nTus entradas para el Concierto Acústico JORJVANA están confirmadas.\nFecha: 17 Julio 2026, 7:00 PM\nLugar: C.C. Vida Abundante\n\nCódigos: ${codes}\n\nDescarga el PDF con los códigos QR. ¡Te esperamos!`);
-  window.open(`mailto:${compradorActual.correo}?subject=${sub}&body=${body}`);
+  msg('msgEntradas','Enviando entradas por correo a '+compradorActual.correo+'...','ok');
+  try{
+    const doc=await generarPDF();
+    const pdfBase64=await blobToBase64(doc.output('blob'));
+    const resp=await fetch('/api/enviar-entradas',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        nombre:compradorActual.nombre,
+        correo:compradorActual.correo,
+        codigos:entradasActuales.map(e=>e.codigo),
+        pdfBase64
+      })
+    });
+    const data=await resp.json().catch(()=>({}));
+    if(!resp.ok || !data.ok) throw new Error(data.error||'No se pudo enviar el correo.');
+    msg('msgEntradas','✅ Entradas enviadas a '+compradorActual.correo,'ok');
+  }catch(e){
+    msg('msgEntradas','❌ Error al enviar el correo: '+e.message,'err');
+  }
 }
 
 /* ---------- Validación / Escáner ---------- */
