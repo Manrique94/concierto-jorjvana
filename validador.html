@@ -14,6 +14,15 @@
 </head>
 <body>
 
+<div id="accessOverlay" class="access-overlay" onclick="hideAccessOverlay()">
+  <div class="access-box">
+    <div id="accessIcon" class="access-icon"></div>
+    <div id="accessTitle" class="access-title"></div>
+    <div id="accessSub" class="access-sub"></div>
+    <div class="access-hint">Toca para cerrar</div>
+  </div>
+</div>
+
 <header class="bar">
   <div class="container">
     <div class="logo">CONCIERTO ACÚSTICO <b>JORJVANA</b></div>
@@ -91,11 +100,26 @@
 <script src="js/config.js"></script>
 <script src="js/common.js"></script>
 <script>
-let scanner = null, ultimoCodigo = null;
+let scanner = null, ultimoCodigo = null, accessHideTimer = null;
 
 function init(){
   initSupabase();
   checkValidadorSession();
+}
+
+/* ---------- Mensaje grande de acceso ---------- */
+function showAccess(ok, subtitle){
+  const ov=document.getElementById('accessOverlay');
+  if(accessHideTimer){ clearTimeout(accessHideTimer); accessHideTimer=null; }
+  document.getElementById('accessIcon').textContent = ok ? '✓' : '✗';
+  document.getElementById('accessTitle').textContent = ok ? 'ACCESO PERMITIDO' : 'ACCESO DENEGADO';
+  document.getElementById('accessSub').textContent = subtitle || '';
+  ov.className = 'access-overlay show ' + (ok ? 'ok' : 'deny');
+  accessHideTimer = setTimeout(hideAccessOverlay, 2000);
+}
+function hideAccessOverlay(){
+  document.getElementById('accessOverlay').classList.remove('show');
+  if(accessHideTimer){ clearTimeout(accessHideTimer); accessHideTimer=null; }
 }
 
 /* ---------- Acceso a "Validar QR" ---------- */
@@ -134,9 +158,13 @@ function logoutValidador(){
 /* ---------- Validación / Escáner ---------- */
 function startScan(){
   if(scanner) return;
-  scanner=new Html5Qrcode('reader');
-  scanner.start({facingMode:'environment'},{fps:10,qrbox:220},
-    code=>{ scanner.pause(); consultarCodigo(code.trim().toUpperCase()); setTimeout(()=>{try{scanner.resume()}catch(e){}},2500); },
+  scanner=new Html5Qrcode('reader', {
+    formatsToSupport:[Html5QrcodeSupportedFormats.QR_CODE],
+    experimentalFeatures:{useBarCodeDetectorIfSupported:true},
+    verbose:false
+  });
+  scanner.start({facingMode:'environment'},{fps:15,qrbox:240,aspectRatio:1},
+    code=>{ scanner.pause(); consultarCodigo(code.trim().toUpperCase()); setTimeout(()=>{try{scanner.resume()}catch(e){}},2000); },
     ()=>{}
   ).catch(e=>alert('No se pudo abrir la cámara: '+e));
 }
@@ -155,6 +183,7 @@ async function consultarCodigo(code){
     document.getElementById('srNombre').textContent=''; document.getElementById('srCodigo').textContent=code;
     document.getElementById('srFecha').textContent=''; ingBtn.style.display='none';
     await sb.from('validaciones').insert({codigo:code,resultado:'NO_EXISTE',accion:'CONSULTA'});
+    showAccess(false,'CÓDIGO NO EXISTE');
     return;
   }
   const cls={VALIDA:'sr-valida',UTILIZADA:'sr-util',ANULADA:'sr-anula'}[data.estado];
@@ -167,6 +196,14 @@ async function consultarCodigo(code){
     ? 'Ingresó: '+new Date(data.fecha_ingreso).toLocaleString('es-PE')
     : 'Compra: '+new Date(data.fecha_compra).toLocaleDateString('es-PE');
   ingBtn.style.display = data.estado==='VALIDA' ? 'inline-block':'none';
+
+  if(data.estado==='VALIDA'){
+    showAccess(true, data.nombre_asistente);
+  }else if(data.estado==='UTILIZADA'){
+    showAccess(false, 'ENTRADA YA UTILIZADA');
+  }else{
+    showAccess(false, 'ENTRADA ANULADA');
+  }
 }
 
 function ingresar(){ registrarIngreso(document.getElementById('fCodigo').value.trim().toUpperCase()); }
@@ -182,18 +219,22 @@ async function registrarIngreso(code){
     box.classList.add('sr-valida'); document.getElementById('srTitle').textContent='✅ INGRESO REGISTRADO';
     document.getElementById('srNombre').textContent='Bienvenido: '+data.nombre;
     document.getElementById('srCodigo').textContent='Código: '+data.codigo;
-    document.getElementById('srFecha').textContent=new Date().toLocaleString('es-PE');
+    document.getElementById('srFecha').textContent='Ingresó: '+new Date(data.fecha_ingreso).toLocaleString('es-PE');
+    showAccess(true, data.nombre);
   }else if(r==='UTILIZADA'){
     box.classList.add('sr-util'); document.getElementById('srTitle').textContent='⚠️ ENTRADA YA UTILIZADA';
     document.getElementById('srNombre').textContent=data.nombre||'';
     document.getElementById('srCodigo').textContent='Código: '+(data.codigo||code);
     document.getElementById('srFecha').textContent= data.fecha_ingreso?'Ingresó: '+new Date(data.fecha_ingreso).toLocaleString('es-PE'):'';
+    showAccess(false, 'ENTRADA YA UTILIZADA');
   }else if(r==='ANULADA'){
     box.classList.add('sr-anula'); document.getElementById('srTitle').textContent='🚫 ENTRADA ANULADA';
     document.getElementById('srNombre').textContent=data.nombre||''; document.getElementById('srCodigo').textContent=code;
+    showAccess(false, 'ENTRADA ANULADA');
   }else{
     box.classList.add('sr-noex'); document.getElementById('srTitle').textContent='❌ NO EXISTE';
     document.getElementById('srCodigo').textContent=code;
+    showAccess(false, 'CÓDIGO NO EXISTE');
   }
 }
 
