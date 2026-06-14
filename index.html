@@ -10,7 +10,7 @@
 <!-- QR -->
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
@@ -34,7 +34,7 @@
   <!-- ===================== HOME ===================== -->
   <section id="home" class="page active">
     <div class="hero">
-      <img src="concierto.jpg" alt="Concierto Acústico JORJVANA">
+      <img src="assets/images/concierto.jpg" alt="Concierto Acústico JORJVANA">
       <div class="hero-info">
         <div><span>Fecha</span><strong>17 Julio 2026</strong></div>
         <div><span>Hora</span><strong>7:00 PM</strong></div>
@@ -55,7 +55,7 @@
   <!-- ===================== COMPRAR ===================== -->
   <section id="comprar" class="page">
     <div class="sec-hero">
-      <img src="concierto.jpg" alt="JORJVANA">
+      <img src="assets/images/concierto.jpg" alt="JORJVANA">
       <div class="ov"><h1>Compra tus <b>entradas</b></h1><p>17 Julio 2026 · 7:00 PM · C.C. Vida Abundante · S/ 10.00</p></div>
     </div>
 
@@ -136,7 +136,7 @@
   <!-- ===================== CONSULTA ===================== -->
   <section id="consulta" class="page">
     <div class="sec-hero">
-      <img src="concierto.jpg" alt="JORJVANA">
+      <img src="assets/images/concierto.jpg" alt="JORJVANA">
       <div class="ov"><h1>Consulta tus <b>entradas</b></h1><p>Revisa el estado de tu compra y tus entradas con QR</p></div>
     </div>
 
@@ -158,8 +158,8 @@
 
 </div>
 
-<script src="config.js"></script>
-<script src="common.js"></script>
+<script src="js/config.js"></script>
+<script src="js/common.js"></script>
 <script>
 let reservaActual = null;
 let countdownInterval = null;
@@ -168,7 +168,7 @@ function init(){
   initSupabase();
   if(sb) cargarContador();
   calcTotal();
-  fetch('yape.jpg').then(r=>{ if(r.ok) document.getElementById('qrYape').innerHTML='<img src="yape.jpg" style="max-height:140px;margin:auto">'; });
+  fetch('assets/images/yape.jpg').then(r=>{ if(r.ok) document.getElementById('qrYape').innerHTML='<img src="assets/images/yape.jpg" style="max-height:140px;margin:auto">'; });
 
   const params = new URLSearchParams(location.search);
   const codigoPago = params.get('codigo_pago');

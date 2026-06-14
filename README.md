@@ -1,115 +1,398 @@
-# 🎫 Sistema de Entradas — Concierto Acústico JORJVANA
+# 🎵 Concierto Acústico JORJVANA - Sistema de Venta de Entradas
 
-Plataforma web para **vender, administrar y validar** entradas digitales con QR únicos.
-Aforo: hasta **500 asistentes** · Compras múltiples por persona · Validación en tiempo real desde el celular.
+Sistema completo de venta, validación y gestión de entradas para eventos. Incluye compra con QR, validación en tiempo real y panel de administración.
 
----
+## 📋 Tabla de Contenidos
 
-## 📁 Archivos
+- [Estructura del Proyecto](#estructura-del-proyecto)
+- [Requisitos Previos](#requisitos-previos)
+- [Configuración Inicial](#configuración-inicial)
+- [Flujos de Usuario](#flujos-de-usuario)
+- [Despliegue](#despliegue)
+- [Variables de Entorno](#variables-de-entorno)
+- [Solución de Problemas](#solución-de-problemas)
 
-| Archivo | Qué es |
-|---|---|
-| `index.html` | La aplicación completa (frontend) |
-| `supabase_schema.sql` | Script para crear la base de datos |
-| `concierto.jpg` | Imagen del evento (ya incluida) |
-| `vercel.json` | Configuración de hosting (Vercel) |
-| `yape.jpg` | QR de pago de Yape |
-| `entrada-virtual.png` | Diseño de fondo de la entrada virtual (PDF/correo), formato 9:16 |
-| `api/enviar-entradas.js` | Función serverless (Vercel) que envía el PDF de entradas por correo |
+## 📁 Estructura del Proyecto
 
----
-
-## 🚀 Pasos de instalación (15 min)
-
-### 1) Crear la base de datos en Supabase
-1. Entra a **https://supabase.com** → crea una cuenta gratuita → **New Project**.
-2. Cuando esté listo, ve a **SQL Editor → New query**.
-3. Copia y pega TODO el contenido de `supabase_schema.sql` y presiona **Run**.
-   Esto crea las tablas (compradores, entradas, validaciones), las funciones y el bucket de comprobantes.
-
-### 2) Obtener tus credenciales
-En Supabase: **Project Settings → API**. Copia:
-- **Project URL** (algo como `https://abcd.supabase.co`)
-- **anon public key**
-
-### 3) Configurar la app
-Abre `index.html` y edita el bloque de configuración (cerca del final):
-
-```js
-window.SUPABASE_URL = "https://TU-PROYECTO.supabase.co";
-window.SUPABASE_KEY = "TU-ANON-KEY";
-window.ADMIN_PASS   = "jorjvana2026";        // cambia esta clave
-window.WHATSAPP_ADMIN = "51987654321";
+```
+CONCIERTO-JORJVANA/
+├── api/
+│   └── enviar-entradas.js          # Serverless function de Vercel para enviar correos
+│
+├── assets/
+│   └── images/
+│       ├── concierto.jpg           # Imagen principal del evento
+│       ├── entrada-virtual.png     # Ícono de entrada
+│       └── yape.jpg                # Código QR de Yape (actualizar con tu QR)
+│
+├── css/
+│   └── style.css                   # Estilos compartidos por todas las páginas
+│
+├── js/
+│   ├── config.js                   # Credenciales de Supabase y configuración global
+│   └── common.js                   # Funciones utilitarias compartidas
+│
+├── sql/
+│   ├── supabase_schema.sql         # Estructura base de datos
+│   └── supabase_fix_rpc.sql        # Funciones RPC de Supabase
+│
+├── index.html                      # Página pública de compra de entradas
+├── admin.html                      # Panel de administración
+├── validador.html                  # Página de validación QR (puerta)
+│
+├── .env.local                      # Variables de entorno (credenciales Vercel)
+├── .gitignore                      # Archivos a ignorar en Git
+├── package.json                    # Dependencias del proyecto
+├── package-lock.json               # Lock de dependencias
+├── vercel.json                     # Configuración de despliegue en Vercel
+└── README.md                       # Este archivo
 ```
 
-### 4) Tu QR de pago
-Coloca la imagen **`yape.jpg`** junto al `index.html` (ya incluida).
-Se muestra automáticamente en la sección de pago. Ajusta también el número que aparece en el HTML (busca "987 654 321").
+## ⚙️ Requisitos Previos
 
-### 5) Publicar en Vercel
-**Opción A — Vercel CLI (rápido, sin GitHub):**
-1. Instala la CLI: `npm install -g vercel`
-2. Desde la carpeta del proyecto, ejecuta: `vercel`
-3. Sigue las preguntas (acepta los valores por defecto: sin framework, directorio actual).
-4. Para publicar a producción: `vercel --prod`
-5. ¡Listo! Tendrás una URL pública tipo `https://jorjvana.vercel.app`.
+- **Node.js** 16+ (para desarrollo local y API)
+- **Supabase** (base de datos en la nube)
+- **Vercel** (hosting del proyecto)
+- **SMTP de Gmail** (para envío de correos con entradas)
 
-**Opción B — Desde GitHub:**
-1. Sube esta carpeta a un repositorio en GitHub.
-2. Entra a **https://vercel.com** → **Add New → Project** → importa el repositorio.
-3. Déjalo como proyecto estático (sin build command, *Output Directory* = `.`) y haz click en **Deploy**.
+## 🚀 Configuración Inicial
 
-### 6) Envío de entradas por correo (opcional)
-El botón **✉ Enviar por correo** del panel admin envía el PDF de entradas al correo del comprador usando tu cuenta de Gmail (`davidalexandermanriquevilchez@gmail.com`). Para activarlo:
+### 1. Clonar el Repositorio
 
-1. Activa la **verificación en 2 pasos** en esa cuenta de Gmail: **https://myaccount.google.com/security**.
-2. Genera una **contraseña de aplicación**: **https://myaccount.google.com/apppasswords** (elige "Correo" → "Otra", ej. "JORJVANA").
-3. En Vercel: **Project → Settings → Environment Variables**, agrega:
-   - `GMAIL_USER` = tu correo de Gmail (ej. `davidalexandermanriquevilchez@gmail.com`)
-   - `GMAIL_APP_PASSWORD` = la contraseña de aplicación generada (16 caracteres, sin espacios)
-4. Vuelve a desplegar (**Redeploy**) para que los cambios surtan efecto.
+```bash
+git clone https://github.com/tu-usuario/CONCIERTO-JORJVANA.git
+cd CONCIERTO-JORJVANA
+```
 
-Si estas variables no están configuradas, el botón mostrará un error indicando que el envío de correos no está habilitado.
+### 2. Instalar Dependencias
+
+```bash
+npm install
+```
+
+### 3. Configurar Supabase
+
+#### a) Crear proyecto en Supabase
+
+1. Ir a [supabase.com](https://supabase.com)
+2. Crear nuevo proyecto
+3. Copiar las credenciales (Project URL y Anon Key)
+
+#### b) Crear tablas y funciones
+
+1. En Supabase, ir a **SQL Editor**
+2. Ejecutar los scripts en este orden:
+   - `sql/supabase_schema.sql` (crear tablas)
+   - `sql/supabase_fix_rpc.sql` (crear funciones RPC)
+
+### 4. Configurar Credenciales
+
+Editar `js/config.js` con tus credenciales:
+
+```javascript
+window.SUPABASE_URL = "https://tu-proyecto.supabase.co";
+window.SUPABASE_KEY = "tu_clave_publica";
+window.ADMIN_PASS = "tu_clave_admin";
+window.WHATSAPP_ADMIN = "51978134651"; // Tu número con código de país
+window.PRECIO = 10; // Precio por entrada en soles
+```
+
+### 5. Configurar Imagen de Yape
+
+1. Actualizar `assets/images/yape.jpg` con tu código QR de Yape personal
+
+### 6. Configurar Variables de Entorno (Vercel)
+
+En Vercel dashboard, agregar estas variables:
+
+```
+GMAIL_USER=tu-correo@gmail.com
+GMAIL_APP_PASSWORD=tu-clave-app-gmail
+```
+
+## 👥 Flujos de Usuario
+
+### 📱 Flujo 1: Compra de Entradas (index.html)
+
+1. **Usuario accede a la página**
+   - Ve información del evento: fecha, hora, lugar, precio
+   - Ve cantidad de entradas disponibles
+
+2. **Paso 1: Ingresa datos**
+   - Nombre completo (validación requerida)
+   - DNI (8 dígitos, validación numérica)
+   - Celular (validación requerida)
+   - Correo (validación de email)
+   - Cantidad de entradas (1-10)
+   - Sistema calcula total automáticamente
+
+3. **Paso 2: Realiza pago por Yape**
+   - Se genera código de pago único (JORJ-XXXXXX)
+   - Se crea reserva con expiración en 30 minutos
+   - Se muestra QR de Yape
+   - Usuario toma captura de comprobante de pago
+   - Carga archivo de comprobante
+   - Sistema almacena evidencia en Supabase Storage
+
+4. **Paso 3: Confirmación**
+   - Compra registrada como "PENDIENTE_APROBACION"
+   - Sistema guarda código de pago para seguimiento
+   - Usuario puede consultar estado en "Mis entradas"
+
+**Flujo de Base de Datos:**
+```
+Datos → crear_reserva (RPC) → comprador (RESERVADO, 30 min)
+    ↓
+Comprobante → registrar_comprobante (RPC) → PENDIENTE_APROBACION
+    ↓
+Admin aprueba → APROBADO
+    ↓
+Sistema genera entradas (tabla "entradas")
+    ↓
+Email automático con QR de cada entrada
+```
+
+### 👨‍💼 Flujo 2: Aprobación de Pagos (admin.html)
+
+1. **Admin ingresa con contraseña**
+   - Acceso restringido con clave
+
+2. **Ve estadísticas en tiempo real**
+   - Entradas vendidas
+   - Entradas utilizadas
+   - Entradas disponibles
+   - Recaudación total
+
+3. **Gestiona validadores QR**
+   - Crea nuevos validadores de puerta
+   - Asigna códigos de acceso
+   - Genera código automático o manual
+
+4. **Revisa comprobantes de pago**
+   - Tabla de compradores filtrable
+   - Ve estado de cada compra
+   - Puede descargar imagen del comprobante
+   - Aprueba o rechaza manualmente
+
+5. **Genera entradas**
+   - Al aprobar, genera entradas con QR único
+   - Envía correo automático con entradas
+
+6. **Exportación de datos**
+   - Descarga Excel con todos los compradores
+   - Genera PDF de entradas por comprador
+
+### 🎫 Flujo 3: Validación en Puerta (validador.html)
+
+1. **Validador ingresa con código de acceso**
+   - Código único generado por admin
+   - Diferente a la clave de admin (más seguro)
+
+2. **Escanea o ingresa código manualmente**
+   - Abre cámara del celular
+   - Escanea QR de entrada
+   - O ingresa código manualmente (JORJ-2026-XXXXXX)
+
+3. **Sistema valida la entrada**
+   - ✅ VÁLIDA: Primera vez, permiso de ingreso
+   - ⚠️ UTILIZADA: Ya fue escaneada antes
+   - 🚫 ANULADA: Entrada cancelada
+   - ❌ NO EXISTE: Código inválido
+
+4. **Registra ingreso**
+   - Marca hora de ingreso
+   - Actualiza estado a "UTILIZADA"
+   - Previene ingresos duplicados
+
+5. **Log de validación**
+   - Registra cada intento en tabla "validaciones"
+
+## 🌐 Despliegue en Vercel
+
+### 1. Preparar Repositorio Git
+
+```bash
+git add .
+git commit -m "chore: reorganizar estructura del proyecto"
+git push origin main
+```
+
+### 2. Conectar a Vercel
+
+1. Ir a [vercel.com](https://vercel.com)
+2. Conectar repositorio de GitHub
+3. Seleccionar proyecto `CONCIERTO-JORJVANA`
+
+### 3. Configurar Variables de Entorno
+
+En Vercel Settings → Environment Variables:
+
+```
+GMAIL_USER = tu-correo@gmail.com
+GMAIL_APP_PASSWORD = tu-clave-app-gmail
+```
+
+### 4. Deploy
+
+```bash
+# Automático con cada push a main
+git push origin main
+```
+
+El proyecto se despliega en: `https://concierto-jorjvana.vercel.app`
+
+### 5. Configurar Dominio Custom (Opcional)
+
+En Vercel Settings → Domains, agregar dominio personalizado
+
+## 🔐 Variables de Entorno
+
+### .env.local (Solo servidor - Vercel)
+
+```
+GMAIL_USER=tu-correo@gmail.com
+GMAIL_APP_PASSWORD=tu-clave-app-gmail
+VERCEL_OIDC_TOKEN=auto-generado-por-vercel
+```
+
+### config.js (Compartido en cliente - PÚBLICO)
+
+⚠️ **IMPORTANTE:** Los valores en `config.js` son públicos (visibles en el navegador). No guardar secretos aquí.
+
+```javascript
+window.SUPABASE_URL = "https://..."          // Público (Anon Key)
+window.SUPABASE_KEY = "pk_..."               // Público (Anon Key)
+window.ADMIN_PASS = "tu-clave-admin"         // Considera cambiar si se filtra
+window.WHATSAPP_ADMIN = "51..."              // Público (número)
+window.PRECIO = 10                           // Público
+```
+
+## 📧 Configurar Gmail App Password
+
+Para poder enviar correos automáticos desde el servidor:
+
+1. Activar autenticación en 2 pasos en Google Account
+2. Generar "App Password"
+3. Copiar la contraseña generada (16 caracteres)
+4. Guardar en variable `GMAIL_APP_PASSWORD` en Vercel
+
+## 📊 Estructura de Datos (Supabase)
+
+### Tabla: compradores
+```sql
+id              UUID
+codigo_pago     TEXT (JORJ-XXXXXX)
+nombre          TEXT
+dni             TEXT (8 dígitos)
+celular         TEXT
+correo          EMAIL
+cantidad        INTEGER
+total           DECIMAL
+comprobante_url TEXT (URL a Storage)
+comprobante_hash TEXT (SHA-256)
+estado          TEXT (RESERVADO, PENDIENTE_APROBACION, APROBADO, RECHAZADO)
+metodo_pago     TEXT (Yape, Transferencia, etc)
+expira_en       TIMESTAMP
+created_at      TIMESTAMP
+```
+
+### Tabla: entradas
+```sql
+id              UUID
+comprador_id    UUID FK → compradores
+numero          INTEGER (orden dentro de la compra)
+codigo          TEXT (JORJ-2026-XXXXXX)
+nombre_asistente TEXT
+estado          TEXT (VALIDA, UTILIZADA, ANULADA)
+fecha_compra    TIMESTAMP
+fecha_ingreso   TIMESTAMP (null hasta usar)
+```
+
+### Tabla: validadores
+```sql
+id              UUID
+nombre          TEXT
+clave           TEXT (código de acceso)
+activo          BOOLEAN
+creado_en       TIMESTAMP
+```
+
+### Tabla: validaciones
+```sql
+id              UUID
+codigo          TEXT
+resultado       TEXT (INGRESO_OK, UTILIZADA, ANULADA, NO_EXISTE)
+validador       TEXT
+accion          TEXT (CONSULTA, INGRESO)
+created_at      TIMESTAMP
+```
+
+### Tabla: configuracion
+```sql
+id              INTEGER
+aforo           INTEGER (total de entradas disponibles)
+```
+
+## 🐛 Solución de Problemas
+
+### "Configura tus credenciales de Supabase"
+
+**Problema:** Aparece advertencia amarilla en la página
+
+**Solución:**
+1. Verificar que `js/config.js` tenga valores reales
+2. No debe contener "TU-PROYECTO" ni "TU-ANON"
+3. Reload la página (Ctrl+F5)
+
+### No llegan los correos con entradas
+
+**Problema:** Admin aprueba compra pero usuario no recibe email
+
+**Solución:**
+1. Verificar que `GMAIL_USER` y `GMAIL_APP_PASSWORD` estén en Vercel
+2. Verificar que el correo sea correcto en la base de datos
+3. Revisar logs en Vercel: `vercel logs`
+4. Asegurar que Gmail tiene "Aplicaciones menos seguras" habilitadas o usar App Password
+
+### QR de Yape no se ve
+
+**Problema:** La imagen `assets/images/yape.jpg` no carga
+
+**Solución:**
+1. Verificar que el archivo existe en la carpeta correcta
+2. Probar en navegador: `https://dominio.com/assets/images/yape.jpg`
+3. Revalidar que la ruta es correcta (sensible a mayúsculas)
+
+### Entradas no se generan
+
+**Problema:** Admin aprueba pero no se crean entradas
+
+**Solución:**
+1. Verificar que la función RPC `generar_entradas` existe en Supabase
+2. Revisar logs de Supabase
+3. Asegurar que `sql/supabase_fix_rpc.sql` fue ejecutado
+
+### Validador no puede ingresar
+
+**Problema:** Código de validador válido no funciona
+
+**Solución:**
+1. Verificar que el validador está "activo" en tabla
+2. Revisión sensible a mayúsculas
+3. Probar con contraseña admin directamente
+4. Ver logs en navegador (F12 → Console)
+
+## 📱 Contacto y Soporte
+
+- **WhatsApp:** +51 978 134 651 (número de admin en config.js)
+- **Correo:** administrador@ejemplo.com
+- **GitHub Issues:** Para reportar bugs
+
+## 📄 Licencia
+
+© 2026 Concierto Acústico JORJVANA. Todos los derechos reservados.
 
 ---
 
-## 🧭 Cómo se usa
-
-**Página principal** → muestra el evento, contador de entradas y botón de compra.
-
-**Comprar** → no requiere crear cuenta ni iniciar sesión. El flujo es:
-1. El cliente llena sus datos y elige la cantidad (el total se calcula solo).
-2. Presiona **"Pagar con Yape"**: se crea una reserva temporal en `public.compradores` con estado **RESERVADO**, un **código de pago** único (ej. `JORJ-12345`) y **30 minutos** para completar el pago (`expira_en`).
-3. Se muestra el QR de Yape, el monto total, el código de pago y una **cuenta regresiva** de 30 minutos.
-4. El cliente paga por Yape y sube la captura del comprobante (desde galería o tomando una foto con la cámara). El comprobante no puede repetirse: si el archivo ya fue usado en otra compra, se rechaza.
-5. Al subir el comprobante, la compra pasa a **PENDIENTE_APROBACION**.
-6. Si pasan los 30 minutos sin subir comprobante, la reserva pasa a **EXPIRADO** y el cupo se libera automáticamente (no se descuenta del aforo).
-7. El comprador recibirá sus entradas por WhatsApp o correo una vez que el pago sea **APROBADO** desde el panel admin.
-
-Las entradas (y por lo tanto el aforo) solo se descuentan cuando el pago es **APROBADO**; mientras una reserva está activa (RESERVADO no vencido o PENDIENTE_APROBACION), su cantidad se resta del contador de "Disponibles" para evitar sobreventa.
-
-**Admin** (con la clave configurada en `ADMIN_PASS`) →
-- Ve la lista de compradores (incluye su código de pago y estado: RESERVADO, PENDIENTE_APROBACION, APROBADO, RECHAZADO, EXPIRADO, CANCELADO), busca por nombre/DNI/teléfono.
-- **Aprobar** un pago **PENDIENTE_APROBACION** genera automáticamente las entradas con código y QR únicos (ej. `JORJ-2026-A8F7K2`) y recién ahí se descuentan del aforo.
-- **Rechazar** un pago lo marca como RECHAZADO (no genera entradas).
-- **Eliminar** una compra en estado RESERVADO, PENDIENTE_APROBACION, RECHAZADO, EXPIRADO o CANCELADO la borra junto con su comprobante (si tiene). Las compras APROBADO y sus entradas nunca pueden eliminarse desde aquí.
-- Descarga las entradas en **PDF**, o envíalas por **WhatsApp** / **correo**.
-- Exporta todo a **Excel**.
-- En **📊 Estadísticas** puede **aumentar o reducir el aforo total** (cantidad de entradas disponibles para la venta) sin afectar las entradas ya vendidas.
-
-**Validar QR** → en la puerta, desde cualquier celular:
-- Acceso restringido: pide un **código de validador**. El administrador (clave `ADMIN_PASS`) puede crear, activar/desactivar o eliminar estos códigos desde **Admin → 👮 Validadores de QR**, uno por cada persona que ayudará en la puerta. El administrador también puede entrar aquí con su propia clave.
-- **Consultar**: muestra estado (VÁLIDA / UTILIZADA / ANULADA / NO EXISTE), nombre y código.
-- **Registrar ingreso**: marca la entrada como **UTILIZADA**. Si la reescanean, avisa *"ENTRADA YA UTILIZADA"*.
-
----
-
-## 🔒 Seguridad
-- Los códigos QR son **aleatorios** (generados con `gen_random_bytes`), no predecibles.
-- La generación verifica que no haya duplicados contra la base de datos.
-- Cada entrada solo puede usarse **una vez** (la marca de ingreso se hace dentro de una función con bloqueo de fila).
-- Cada comprobante de pago se identifica por su **hash SHA-256**; no puede registrarse el mismo comprobante en dos compras distintas (verificación en `registrar_comprobante` + índice único en la base de datos).
-- Las reservas de pago (RESERVADO) tienen una expiración de 30 minutos (`expira_en`); `limpiar_reservas_expiradas()` las marca como EXPIRADO automáticamente.
-- Para producción se recomienda proteger el panel admin con autenticación de Supabase (la versión actual usa una clave simple del lado del cliente).
-
-> 💡 Para escanear con la cámara, Netlify sirve la página por **HTTPS**, requisito de los navegadores. Funciona en Android/iOS.
+**Última actualización:** 2026-06-13  
+**Versión:** 2.0 (Estructura reorganizada)
