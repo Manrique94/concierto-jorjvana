@@ -6,7 +6,7 @@
 body{font-family:'Segoe UI',system-ui,Arial,sans-serif;color:var(--negro);line-height:1.5;position:relative;min-height:100vh}
 /* Fondo fijo con la imagen del concierto */
 body::before{content:"";position:fixed;inset:0;z-index:-2;
-  background:url('concierto.jpg') center/cover no-repeat fixed;
+  background:url('../assets/images/concierto.jpg') center/cover no-repeat fixed;
   filter:blur(3px) brightness(.55);transform:scale(1.05)}
 body::after{content:"";position:fixed;inset:0;z-index:-1;
   background:linear-gradient(180deg,rgba(0,0,0,.45),rgba(20,20,25,.78))}

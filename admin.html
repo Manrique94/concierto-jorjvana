@@ -378,7 +378,7 @@ function fitFontSize(doc,text,maxWidth,maxSize=12,minSize=6){
 async function generarPDF(){
   const {jsPDF}=window.jspdf;
   const doc=new jsPDF({unit:'mm',format:[TICKET_W,TICKET_H]});
-  const fondo=await cargarImagenDataURL('entrada-virtual.png');
+  const fondo=await cargarImagenDataURL('assets/images/entrada-virtual.png');
   for(let i=0;i<entradasActuales.length;i++){
     const e=entradasActuales[i];
     if(i>0) doc.addPage([TICKET_W,TICKET_H],'portrait');
