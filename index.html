@@ -7,6 +7,8 @@
 
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- QR -->
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 
 <link rel="stylesheet" href="style.css">
 </head>
@@ -17,8 +19,8 @@
     <div class="logo">CONCIERTO ACÚSTICO <b>JORJVANA</b></div>
     <nav>
       <button data-page="home" class="active">Inicio</button>
-      <button data-page="comprar">Comprar</button>
-      <a href="validador.html">Validar QR</a>
+      <button data-page="comprar">Comprar entradas</button>
+      <button data-page="consulta">Mis entradas</button>
     </nav>
   </div>
 </header>
@@ -42,7 +44,9 @@
     </div>
 
     <div class="counter">
+      <div class="box"><b id="cVendidas">0</b><span>Vendidas</span></div>
       <div class="box"><b id="cDisponibles">500</b><span>Disponibles</span></div>
+      <div class="box"><b id="cUtilizadas">0</b><span>Ingresaron</span></div>
     </div>
 
     <div class="center" style="margin:16px 0 24px">
@@ -57,8 +61,9 @@
       <div class="ov"><h1>Compra tus <b>entradas</b></h1><p>17 Julio 2026 · 7:00 PM · C.C. Vida Abundante · S/ 10.00</p></div>
     </div>
 
-    <div id="comprarForm">
-      <div class="card" id="cardDatos">
+    <!-- Paso 1: datos del comprador -->
+    <div id="comprarPaso1">
+      <div class="card">
         <h2>1 · Datos del comprador</h2>
         <div class="row">
           <div><label>Nombre completo *</label><input id="fNombre" placeholder="Ej: Juan Pérez"></div>
@@ -80,67 +85,77 @@
           </div>
         </div>
         <div class="total-box"><span>Total a pagar</span><b id="fTotal">S/ 10.00</b></div>
-      </div>
 
-      <div class="card" id="cardPagar">
-        <h2>2 · Pago con Yape</h2>
-        <div class="pago-qr">
-          <div class="q">
-            <h4>Yape</h4>
-            <div class="ph" id="qrYape">Coloca tu QR de Yape<br>(reemplaza en /yape.jpg)</div>
-            <p class="muted" style="margin-top:8px">Nº: 987 654 321</p>
-          </div>
+        <div class="center" style="margin-top:20px">
+          <button class="btn" id="btnReservar" onclick="crearReserva()">Pagar con Yape</button>
         </div>
-
-        <p class="muted" style="margin-top:14px">Al presionar "Pagar con Yape" se reservarán tus entradas durante <b>30 minutos</b>. Tendrás ese tiempo para realizar el pago y subir tu comprobante.</p>
-
-        <div class="center" style="margin-top:16px">
-          <button class="btn" id="btnPagarYape" onclick="pagarConYape()">Pagar con Yape</button>
-        </div>
-        <div id="msgPagar"></div>
-      </div>
-
-      <div class="card hidden" id="cardReserva">
-        <h2>3 · Confirma tu pago</h2>
-        <p class="muted">Realiza el pago por Yape al número <b>987 654 321</b> usando el monto indicado. Luego sube tu captura de pago antes de que termine el tiempo, indicando el código de pago como referencia.</p>
-
-        <div class="pago-qr">
-          <div class="q">
-            <h4>Yape</h4>
-            <div class="ph" id="qrYapeReserva">Coloca tu QR de Yape<br>(reemplaza en /yape.jpg)</div>
-            <p class="muted" style="margin-top:8px">Nº: 987 654 321</p>
-          </div>
-        </div>
-
-        <div class="total-box"><span>Monto a pagar</span><b id="rTotal">S/ 0.00</b></div>
-
-        <div class="center" style="margin-top:14px">
-          <span class="muted">Código de pago</span>
-          <div class="pago-codigo" id="rCodigo">JORJ-00000</div>
-        </div>
-
-        <div class="counter">
-          <div class="box"><b id="rTiempo">30:00</b><span>Tiempo restante</span></div>
-        </div>
-
-        <div id="msgReserva"></div>
-
-        <div id="reservaForm">
-          <label style="margin-top:16px">Sube tu captura de pago *</label>
-          <div class="pay-grid">
-            <button type="button" class="btn sm sec" onclick="document.getElementById('fComprobGaleria').click()">🖼 Elegir archivo</button>
-            <button type="button" class="btn sm sec" onclick="document.getElementById('fComprobCamara').click()">📷 Tomar foto</button>
-          </div>
-          <input type="file" id="fComprobGaleria" accept="image/*" class="hidden" onchange="seleccionarComprobante(this.files[0])">
-          <input type="file" id="fComprobCamara" accept="image/*" capture="environment" class="hidden" onchange="seleccionarComprobante(this.files[0])">
-          <div class="comprob-preview" id="comprobPreview"></div>
-
-          <div class="center" style="margin-top:16px">
-            <button class="btn" id="btnConfirmarPago" onclick="confirmarPago()" disabled>Confirmar pago</button>
-          </div>
-        </div>
+        <div id="msgComprar1"></div>
       </div>
     </div>
+
+    <!-- Paso 2: reserva con Yape (30 minutos) + subir comprobante -->
+    <div id="comprarPaso2" class="card hidden">
+      <h2>2 · Paga con Yape</h2>
+      <div class="pago-qr">
+        <div class="q">
+          <h4>Yape</h4>
+          <div class="ph" id="qrYape">Coloca tu QR de Yape<br>(reemplaza en /yape.jpg)</div>
+          <p class="muted" style="margin-top:8px">Nº: 987 654 321</p>
+        </div>
+      </div>
+
+      <div class="total-box"><span>Monto a pagar</span><b id="p2Total">S/ 0.00</b></div>
+
+      <div class="card" style="margin-top:14px;background:var(--gris);box-shadow:none;border:none">
+        <p class="muted center">Tu código de pago (guárdalo para consultar tu compra)</p>
+        <p class="pago-codigo" id="p2Codigo"></p>
+        <p class="muted center">Tiempo restante para subir tu comprobante: <b id="p2Countdown"></b></p>
+      </div>
+
+      <label style="margin-top:16px">Sube tu captura de pago (Yape) *</label>
+      <input type="file" id="fComprob" accept="image/*" onchange="previewComprobante()">
+      <div id="comprobPreview" class="comprob-preview"></div>
+
+      <div class="center" style="margin-top:20px">
+        <button class="btn" id="btnComprobante" onclick="subirComprobante()">Subir comprobante</button>
+      </div>
+      <div id="msgComprar2"></div>
+    </div>
+
+    <!-- Paso 3: confirmación -->
+    <div id="comprarPaso3" class="card hidden">
+      <h2>✅ ¡Listo!</h2>
+      <p>Tu comprobante fue registrado correctamente. Tu compra está <b>PENDIENTE DE APROBACIÓN</b>.</p>
+      <p class="muted">Guarda tu código de pago para consultar el estado de tu compra y ver tus entradas cuando sean aprobadas:</p>
+      <p class="pago-codigo" id="p3Codigo"></p>
+      <div class="center" style="margin-top:14px">
+        <button class="btn" onclick="goto('consulta')">Consultar mis entradas</button>
+        <button class="btn sec" onclick="nuevaCompra()">Hacer otra compra</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== CONSULTA ===================== -->
+  <section id="consulta" class="page">
+    <div class="sec-hero">
+      <img src="concierto.jpg" alt="JORJVANA">
+      <div class="ov"><h1>Consulta tus <b>entradas</b></h1><p>Revisa el estado de tu compra y tus entradas con QR</p></div>
+    </div>
+
+    <div class="card">
+      <h2>Buscar mi compra</h2>
+      <p class="muted">Ingresa el código de pago que recibiste al reservar y tu DNI.</p>
+      <div class="row">
+        <div><label>Código de pago</label><input id="qCodigo" placeholder="JORJ-12345" style="text-transform:uppercase"></div>
+        <div><label>DNI</label><input id="qDni" maxlength="8" placeholder="12345678"></div>
+      </div>
+      <div class="center" style="margin-top:14px">
+        <button class="btn" onclick="consultarCompra()">Consultar</button>
+      </div>
+      <div id="msgConsulta"></div>
+    </div>
+
+    <div id="consultaResultado"></div>
   </section>
 
 </div>
@@ -148,27 +163,23 @@
 <script src="config.js"></script>
 <script src="common.js"></script>
 <script>
-let reservaActual = null, comprobanteFile = null, countdownTimer = null;
+let reservaActual = null;
+let countdownInterval = null;
 
 function init(){
   initSupabase();
   if(sb) cargarContador();
-  // cargar QR de pago si existen
-  fetch('yape.jpg').then(r=>{ if(r.ok){
-    const html='<img src="yape.jpg" style="max-height:140px;margin:auto">';
-    document.getElementById('qrYape').innerHTML=html;
-    document.getElementById('qrYapeReserva').innerHTML=html;
-  }});
-  restaurarReserva();
+  calcTotal();
+  fetch('yape.jpg').then(r=>{ if(r.ok) document.getElementById('qrYape').innerHTML='<img src="yape.jpg" style="max-height:140px;margin:auto">'; });
 }
 
 /* ---------- Navegación ---------- */
-document.querySelectorAll('nav button[data-page]').forEach(b=>{
+document.querySelectorAll('nav button').forEach(b=>{
   b.onclick=()=>goto(b.dataset.page);
 });
 function goto(page){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('nav button[data-page]').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
   document.getElementById(page).classList.add('active');
   const btn=document.querySelector(`nav button[data-page="${page}"]`);
   if(btn) btn.classList.add('active');
@@ -176,151 +187,101 @@ function goto(page){
   if(page==='home') cargarContador();
 }
 
-/* ---------- Contador / estadísticas ---------- */
+/* ---------- Contador de entradas ---------- */
 async function cargarContador(){
   if(!sb) return;
   try{
-    const {data,error} = await sb.rpc('contar_disponibles');
-    if(error) throw error;
-    document.getElementById('cDisponibles').textContent = data ?? 0;
+    const {data:ents} = await sb.from('entradas').select('estado');
+    const vend = ents?.length||0;
+    const util = ents?.filter(e=>e.estado==='UTILIZADA').length||0;
+    const {data:cfg} = await sb.from('configuracion').select('aforo').eq('id',1).maybeSingle();
+    const {data:comps} = await sb.from('compradores').select('cantidad,estado,expira_en');
+    const reservado = (comps||[]).reduce((acc,c)=>{
+      const activo = c.estado==='PENDIENTE' || c.estado==='PENDIENTE_APROBACION'
+        || (c.estado==='RESERVADO' && c.expira_en && new Date(c.expira_en)>new Date());
+      return activo ? acc+(c.cantidad||0) : acc;
+    },0);
+    const aforo = cfg?.aforo ?? 0;
+    document.getElementById('cVendidas').textContent = vend;
+    document.getElementById('cUtilizadas').textContent = util;
+    document.getElementById('cDisponibles').textContent = Math.max(0, aforo-vend-reservado);
   }catch(e){ console.warn(e); }
 }
 
-/* ---------- Compra ---------- */
+/* ---------- Paso 1: datos del comprador ---------- */
 function calcTotal(){
   const c=+document.getElementById('fCant').value;
   document.getElementById('fTotal').textContent='S/ '+(c*PRECIO).toFixed(2);
 }
 
-/* ---------- Reserva temporal de pago (Yape, 30 minutos) ---------- */
-async function pagarConYape(){
-  if(!sb){ msg('msgPagar','Base de datos no configurada (revisa config.js).','err'); return; }
+async function crearReserva(){
+  if(!sb){ msg('msgComprar1','Base de datos no configurada (revisa config.js).','err'); return; }
   const nombre=document.getElementById('fNombre').value.trim();
   const dni=document.getElementById('fDni').value.trim();
   const cel=document.getElementById('fCel').value.trim();
   const mail=document.getElementById('fMail').value.trim();
   const cant=+document.getElementById('fCant').value;
-  const precio=PRECIO;
-  const total=cant*precio;
 
-  console.log('cantidad:',cant,'precio:',precio,'total:',total);
+  if(!nombre||!dni||!cel||!mail){ msg('msgComprar1','Completa nombre, DNI, celular y correo.','err'); return; }
+  if(dni.length!==8){ msg('msgComprar1','El DNI debe tener 8 dígitos.','warn'); return; }
 
-  if(!nombre||!dni||!cel||!mail){ msg('msgPagar','Completa nombre, DNI, celular y correo.','err'); return; }
-  if(dni.length!==8){ msg('msgPagar','El DNI debe tener 8 dígitos.','warn'); return; }
-  if(!Number.isInteger(cant) || cant<1 || !Number.isFinite(precio) || precio<=0 || !Number.isFinite(total) || total<=0){
-    msg('msgPagar','Cantidad o precio inválidos. No se pudo calcular el total.','err');
-    return;
-  }
-
-  const btn=document.getElementById('btnPagarYape'); btn.disabled=true; btn.textContent='Generando...';
+  const btn=document.getElementById('btnReservar'); btn.disabled=true; btn.textContent='Procesando...';
   try{
+    const total=cant*PRECIO;
     const {data,error}=await sb.rpc('crear_reserva',{
       p_nombre:nombre, p_dni:dni, p_celular:cel, p_correo:mail,
       p_cantidad:cant, p_total:total, p_metodo:'Yape'
     });
     if(error) throw error;
-    const reserva=unwrapRpc(data);
-    console.log('crear_reserva ->',reserva);
-    if(!reserva || !reserva.id || !reserva.codigo_pago || !reserva.expira_en || reserva.total==null){
-      throw new Error('Respuesta inválida del servidor al crear la reserva.');
-    }
-    iniciarReserva(reserva);
-  }catch(e){ msg('msgPagar','Error: '+e.message,'err'); }
+    reservaActual=unwrapRpc(data);
+    document.getElementById('msgComprar1').innerHTML='';
+    mostrarPaso2();
+  }catch(e){ msg('msgComprar1','Error: '+e.message,'err'); }
   btn.disabled=false; btn.textContent='Pagar con Yape';
 }
 
-function iniciarReserva(data){
-  reservaActual=data;
-  comprobanteFile=null;
-  console.log('total:',data.total,'expira_en:',data.expira_en);
-  sessionStorage.setItem('reservaActual',JSON.stringify(data));
-
-  document.getElementById('cardDatos').classList.add('hidden');
-  document.getElementById('cardPagar').classList.add('hidden');
-  document.getElementById('cardReserva').classList.remove('hidden');
-  document.getElementById('reservaForm').classList.remove('hidden');
-
-  const totalNum=Number(data.total);
-  document.getElementById('rTotal').textContent='S/ '+(Number.isFinite(totalNum)?totalNum.toFixed(2):'0.00');
-  document.getElementById('rCodigo').textContent=data.codigo_pago || '—';
-  document.getElementById('msgReserva').innerHTML='';
+/* ---------- Paso 2: reserva con Yape (30 min) + comprobante ---------- */
+function mostrarPaso2(){
+  document.getElementById('comprarPaso1').classList.add('hidden');
+  document.getElementById('comprarPaso3').classList.add('hidden');
+  document.getElementById('comprarPaso2').classList.remove('hidden');
+  document.getElementById('p2Total').textContent='S/ '+(+reservaActual.total).toFixed(2);
+  document.getElementById('p2Codigo').textContent=reservaActual.codigo_pago;
+  document.getElementById('msgComprar2').innerHTML='';
   document.getElementById('comprobPreview').innerHTML='';
-  document.getElementById('btnConfirmarPago').disabled=true;
-  document.getElementById('btnConfirmarPago').textContent='Confirmar pago';
-  document.getElementById('fComprobGaleria').value='';
-  document.getElementById('fComprobCamara').value='';
-
-  iniciarCountdown(data.expira_en);
+  document.getElementById('fComprob').value='';
+  document.getElementById('fComprob').disabled=false;
+  document.getElementById('btnComprobante').disabled=false;
+  document.getElementById('btnComprobante').textContent='Subir comprobante';
+  iniciarCountdown(reservaActual.expira_en,'p2Countdown',()=>{
+    msg('msgComprar2','⏰ El tiempo para subir tu comprobante expiró. Genera un nuevo código de pago.','err');
+    document.getElementById('fComprob').disabled=true;
+    document.getElementById('btnComprobante').disabled=true;
+  });
 }
 
-function iniciarCountdown(expiraEn){
-  if(countdownTimer) clearInterval(countdownTimer);
-  let fin=new Date(expiraEn).getTime();
-  if(!Number.isFinite(fin)){
-    console.warn('expira_en inválido o ausente, usando 30*60 segundos desde ahora:',expiraEn);
-    fin=Date.now()+30*60*1000; // 30 * 60 segundos = 1800000 ms
-  }
-  function tick(){
-    const restanteSeg=Math.max(0,Math.floor((fin-Date.now())/1000));
-    if(restanteSeg<=0){
-      clearInterval(countdownTimer); countdownTimer=null;
-      document.getElementById('rTiempo').textContent='00:00';
-      expirarReserva();
-      return;
-    }
-    const m=Math.floor(restanteSeg/60), s=restanteSeg%60;
-    document.getElementById('rTiempo').textContent=`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-  }
-  tick();
-  countdownTimer=setInterval(tick,1000);
+function previewComprobante(){
+  const file=document.getElementById('fComprob').files[0];
+  const prev=document.getElementById('comprobPreview');
+  if(!file){ prev.innerHTML=''; return; }
+  const reader=new FileReader();
+  reader.onload=()=>{ prev.innerHTML=`<img src="${reader.result}" alt="Comprobante">`; };
+  reader.readAsDataURL(file);
 }
 
-async function expirarReserva(){
-  if(reservaActual && sb){
-    await sb.from('compradores').update({estado:'EXPIRADO',fecha_revision:new Date().toISOString()})
-      .eq('id',reservaActual.id).eq('estado','RESERVADO');
-  }
-  sessionStorage.removeItem('reservaActual');
-  reservaActual=null;
-  document.getElementById('reservaForm').classList.add('hidden');
-  document.getElementById('msgReserva').innerHTML=
-    '<div class="alert err">⏰ El tiempo para pagar expiró. Esta reserva fue cancelada y el cupo quedó liberado.</div>'+
-    '<div class="center" style="margin-top:14px"><button class="btn sec" onclick="reiniciarCompra()">Volver a intentar</button></div>';
-  cargarContador();
-}
-
-function reiniciarCompra(){
-  if(countdownTimer){ clearInterval(countdownTimer); countdownTimer=null; }
-  document.getElementById('cardReserva').classList.add('hidden');
-  document.getElementById('cardDatos').classList.remove('hidden');
-  document.getElementById('cardPagar').classList.remove('hidden');
-  document.getElementById('msgPagar').innerHTML='';
-}
-
-function seleccionarComprobante(file){
-  if(!file) return;
-  comprobanteFile=file;
-  const url=URL.createObjectURL(file);
-  document.getElementById('comprobPreview').innerHTML=`<img src="${url}" alt="Comprobante">`;
-  document.getElementById('btnConfirmarPago').disabled=false;
-}
-
-async function hashArchivo(file){
-  const buf=await file.arrayBuffer();
-  const hashBuf=await crypto.subtle.digest('SHA-256',buf);
-  return Array.from(new Uint8Array(hashBuf)).map(b=>b.toString(16).padStart(2,'0')).join('');
-}
-
-async function confirmarPago(){
+async function subirComprobante(){
   if(!sb||!reservaActual) return;
-  if(!comprobanteFile){ msg('msgReserva','Sube la captura de tu pago.','warn'); return; }
+  const file=document.getElementById('fComprob').files[0];
+  if(!file){ msg('msgComprar2','Sube la captura de tu pago.','warn'); return; }
 
-  const btn=document.getElementById('btnConfirmarPago'); btn.disabled=true; btn.textContent='Procesando...';
+  const btn=document.getElementById('btnComprobante'); btn.disabled=true; btn.textContent='Subiendo...';
   try{
-    const hash=await hashArchivo(comprobanteFile);
-    const ext=(comprobanteFile.name.split('.').pop()||'jpg').toLowerCase();
-    const path=`${reservaActual.codigo_pago}_${Date.now()}.${ext}`;
-    const up=await sb.storage.from('comprobantes').upload(path,comprobanteFile);
+    const buf=await file.arrayBuffer();
+    const hashBuf=await crypto.subtle.digest('SHA-256',buf);
+    const hash=Array.from(new Uint8Array(hashBuf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+
+    const path=`${reservaActual.id}_${Date.now()}.${file.name.split('.').pop()}`;
+    const up=await sb.storage.from('comprobantes').upload(path,file);
     if(up.error) throw up.error;
     const url=sb.storage.from('comprobantes').getPublicUrl(path).data.publicUrl;
 
@@ -328,29 +289,155 @@ async function confirmarPago(){
       p_comprador:reservaActual.id, p_url:url, p_hash:hash
     });
     if(error) throw error;
-
-    reservaActual=unwrapRpc(data);
-    sessionStorage.removeItem('reservaActual');
-    if(countdownTimer){ clearInterval(countdownTimer); countdownTimer=null; }
-    document.getElementById('reservaForm').classList.add('hidden');
-    msg('msgReserva','✅ Comprobante recibido. Tu pago está <b>PENDIENTE DE APROBACIÓN</b>. Te contactaremos por WhatsApp o correo cuando sea aprobado y recibas tus entradas.','ok');
+    const resultado=unwrapRpc(data);
+    if(resultado && resultado.ok===false) throw new Error(resultado.error||resultado.message||'No se pudo registrar el comprobante.');
+    // La función puede devolver solo {ok, estado, comprador_id}; conservamos
+    // el código de pago y demás datos de la reserva ya conocidos.
+    reservaActual={...reservaActual, ...resultado};
+    mostrarPaso3();
   }catch(e){
-    msg('msgReserva','Error: '+e.message,'err');
-    btn.disabled=false; btn.textContent='Confirmar pago';
+    msg('msgComprar2','Error: '+e.message,'err');
+    btn.disabled=false; btn.textContent='Subir comprobante';
   }
 }
 
-function restaurarReserva(){
-  const raw=sessionStorage.getItem('reservaActual');
-  if(!raw) return;
-  try{
-    const data=JSON.parse(raw);
-    if(data.estado==='RESERVADO' && new Date(data.expira_en).getTime()>Date.now()){
-      iniciarReserva(data);
-    }else{
-      sessionStorage.removeItem('reservaActual');
+function mostrarPaso3(){
+  if(countdownInterval){ clearInterval(countdownInterval); countdownInterval=null; }
+  document.getElementById('comprarPaso1').classList.add('hidden');
+  document.getElementById('comprarPaso2').classList.add('hidden');
+  document.getElementById('comprarPaso3').classList.remove('hidden');
+  document.getElementById('p3Codigo').textContent=reservaActual.codigo_pago;
+}
+
+function nuevaCompra(){
+  reservaActual=null;
+  if(countdownInterval){ clearInterval(countdownInterval); countdownInterval=null; }
+  document.getElementById('comprarPaso2').classList.add('hidden');
+  document.getElementById('comprarPaso3').classList.add('hidden');
+  document.getElementById('comprarPaso1').classList.remove('hidden');
+  document.getElementById('msgComprar1').innerHTML='';
+  document.getElementById('msgComprar2').innerHTML='';
+  ['fNombre','fDni','fCel','fMail'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('fComprob').value='';
+  document.getElementById('comprobPreview').innerHTML='';
+}
+
+/* ---------- Cuenta regresiva genérica ---------- */
+function iniciarCountdown(expiraEn, elId, onExpire){
+  if(countdownInterval){ clearInterval(countdownInterval); countdownInterval=null; }
+  const el=document.getElementById(elId);
+  function tick(){
+    const restante=new Date(expiraEn)-Date.now();
+    if(restante<=0){
+      clearInterval(countdownInterval); countdownInterval=null;
+      if(el) el.textContent='00:00';
+      if(onExpire) onExpire();
+      return;
     }
-  }catch(e){ sessionStorage.removeItem('reservaActual'); }
+    const min=Math.floor(restante/60000);
+    const seg=Math.floor((restante%60000)/1000);
+    if(el) el.textContent=`${min}:${seg.toString().padStart(2,'0')}`;
+  }
+  tick();
+  countdownInterval=setInterval(tick,1000);
+}
+
+/* ---------- Consulta de mis entradas ---------- */
+async function consultarCompra(){
+  if(!sb){ msg('msgConsulta','Base de datos no configurada (revisa config.js).','err'); return; }
+  const codigo=document.getElementById('qCodigo').value.trim().toUpperCase();
+  const dni=document.getElementById('qDni').value.trim();
+  if(!codigo||!dni){ msg('msgConsulta','Ingresa tu código de pago y tu DNI.','err'); return; }
+
+  document.getElementById('msgConsulta').innerHTML='';
+  document.getElementById('consultaResultado').innerHTML='';
+
+  try{
+    const {data,error}=await sb.from('compradores').select('*').eq('codigo_pago',codigo).eq('dni',dni).maybeSingle();
+    if(error) throw error;
+    if(!data){ msg('msgConsulta','No se encontró ninguna compra con ese código de pago y DNI.','err'); return; }
+    await renderResultadoConsulta(data);
+  }catch(e){ msg('msgConsulta','Error: '+e.message,'err'); }
+}
+
+async function renderResultadoConsulta(c){
+  const area=document.getElementById('consultaResultado');
+  area.innerHTML='';
+  const card=document.createElement('div'); card.className='card';
+
+  if(c.estado==='RESERVADO'){
+    const restante=new Date(c.expira_en)-Date.now();
+    if(restante>0){
+      card.innerHTML=`
+        <h2>⏳ Reserva pendiente de pago</h2>
+        <p>Código de pago: <b>${c.codigo_pago}</b></p>
+        <p>Monto: <b>S/ ${(+c.total).toFixed(2)}</b></p>
+        <p class="muted">Tiempo restante para subir tu comprobante: <b id="cCountdown"></b></p>
+        <div class="center" style="margin-top:14px"><button class="btn" id="btnReanudar">Subir comprobante ahora</button></div>`;
+      area.appendChild(card);
+      document.getElementById('btnReanudar').onclick=()=>{ reservaActual=c; goto('comprar'); mostrarPaso2(); };
+      iniciarCountdown(c.expira_en,'cCountdown',()=>{
+        renderResultadoConsulta({...c, estado:'EXPIRADO'});
+      });
+    }else{
+      card.innerHTML=`
+        <h2>⏰ Reserva expirada</h2>
+        <p>El tiempo para subir tu comprobante expiró. Realiza una nueva compra.</p>
+        <div class="center" style="margin-top:14px"><button class="btn" onclick="goto('comprar')">Nueva compra</button></div>`;
+      area.appendChild(card);
+    }
+    return;
+  }
+
+  if(c.estado==='PENDIENTE_APROBACION' || c.estado==='PENDIENTE'){
+    card.innerHTML=`
+      <h2>🕒 Pendiente de aprobación</h2>
+      <p>Recibimos tu comprobante. Tu compra está siendo revisada.</p>
+      <p>Código de pago: <b>${c.codigo_pago}</b></p>
+      ${c.comprobante_url?`<div class="comprob-preview"><img src="${c.comprobante_url}" alt="Comprobante"></div>`:''}`;
+    area.appendChild(card);
+    return;
+  }
+
+  if(c.estado==='APROBADO'){
+    card.innerHTML=`<h2>✅ Pago aprobado</h2><p>Tus entradas están listas. Presenta el código QR en el ingreso.</p>`;
+    area.appendChild(card);
+    const {data:entradas}=await sb.from('entradas').select('*').eq('comprador_id',c.id).order('numero');
+    const ticketsArea=document.createElement('div');
+    area.appendChild(ticketsArea);
+    renderTickets(entradas||[],ticketsArea);
+    return;
+  }
+
+  if(c.estado==='RECHAZADO'){
+    card.innerHTML=`<h2>❌ Pago rechazado</h2><p>Tu pago no fue aprobado. Si crees que se trata de un error, contáctanos.</p>`;
+    area.appendChild(card);
+    return;
+  }
+
+  card.innerHTML=`
+    <h2>🚫 Compra ${c.estado.toLowerCase()}</h2>
+    <p>Esta compra ya no está activa. Puedes realizar una nueva.</p>
+    <div class="center" style="margin-top:14px"><button class="btn" onclick="goto('comprar')">Nueva compra</button></div>`;
+  area.appendChild(card);
+}
+
+function renderTickets(entradas,areaEl){
+  areaEl.innerHTML='';
+  for(const e of entradas){
+    const div=document.createElement('div'); div.className='ticket';
+    div.innerHTML=`<div class="left">
+        <h3>JORJVANA</h3>
+        <small>Concierto Acústico · 17 Julio 2026 · 7:00 PM</small><br>
+        <small>C.C. Vida Abundante</small>
+        <p style="margin-top:8px"><b>${e.nombre_asistente}</b></p>
+        <p class="muted">Entrada N° ${e.numero}</p>
+        <p class="code">${e.codigo}</p>
+      </div>
+      <div class="right"><canvas id="qr_${e.codigo}"></canvas><div class="code">${e.codigo}</div></div>`;
+    areaEl.appendChild(div);
+    QRCode.toCanvas(document.getElementById('qr_'+e.codigo), e.codigo, {width:140});
+  }
 }
 
 init();
