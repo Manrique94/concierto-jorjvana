@@ -405,15 +405,6 @@ async function descargarPDF(){
   doc.save(`entradas_${compradorActual.nombre.replace(/\s/g,'_')}.pdf`);
 }
 
-function blobToBase64(blob){
-  return new Promise((resolve,reject)=>{
-    const reader=new FileReader();
-    reader.onload=()=>resolve(reader.result.split(',')[1]);
-    reader.onerror=reject;
-    reader.readAsDataURL(blob);
-  });
-}
-
 function enviarWhatsApp(){
   const codes=entradasActuales.map(e=>e.codigo).join(', ');
   const txt=encodeURIComponent(`🎫 ¡Hola ${compradorActual.nombre}! Tus entradas para el CONCIERTO ACÚSTICO JORJVANA (17 Julio 2026, 7PM, C.C. Vida Abundante) están listas.\n\nCódigos: ${codes}\n\nDescarga tu PDF con los QR. ¡Nos vemos!`);
@@ -424,8 +415,7 @@ async function enviarCorreo(){
   if(!compradorActual.correo){ alert('Este comprador no tiene correo registrado.'); return; }
   msg('msgEntradas','Enviando entradas por correo a '+compradorActual.correo+'...','ok');
   try{
-    const doc=await generarPDF();
-    const pdfBase64=await blobToBase64(doc.output('blob'));
+    const codigoPago=compradorActual.codigo_pago||'';
     const resp=await fetch('/api/enviar-entradas',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
@@ -433,7 +423,9 @@ async function enviarCorreo(){
         nombre:compradorActual.nombre,
         correo:compradorActual.correo,
         codigos:entradasActuales.map(e=>e.codigo),
-        pdfBase64
+        codigoPago,
+        urlConsulta:`${location.origin}/index.html?codigo_pago=${encodeURIComponent(codigoPago)}#consulta`,
+        evento:{fecha:'17 de Julio 2026', hora:'7:00 PM', lugar:'C.C. Vida Abundante'}
       })
     });
     const data=await resp.json().catch(()=>({}));

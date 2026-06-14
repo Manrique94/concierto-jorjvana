@@ -169,6 +169,11 @@ function init(){
   if(sb) cargarContador();
   calcTotal();
   fetch('yape.jpg').then(r=>{ if(r.ok) document.getElementById('qrYape').innerHTML='<img src="yape.jpg" style="max-height:140px;margin:auto">'; });
+
+  const params = new URLSearchParams(location.search);
+  const codigoPago = params.get('codigo_pago');
+  if(codigoPago){ document.getElementById('qCodigo').value = codigoPago.toUpperCase(); }
+  if(codigoPago || location.hash==='#consulta'){ goto('consulta'); }
 }
 
 /* ---------- Navegación ---------- */
