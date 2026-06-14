@@ -44,9 +44,7 @@
     </div>
 
     <div class="counter">
-      <div class="box"><b id="cVendidas">0</b><span>Vendidas</span></div>
       <div class="box"><b id="cDisponibles">500</b><span>Disponibles</span></div>
-      <div class="box"><b id="cUtilizadas">0</b><span>Ingresaron</span></div>
     </div>
 
     <div class="center" style="margin:16px 0 24px">
@@ -191,9 +189,7 @@ function goto(page){
 async function cargarContador(){
   if(!sb) return;
   try{
-    const {data:ents} = await sb.from('entradas').select('estado');
-    const vend = ents?.length||0;
-    const util = ents?.filter(e=>e.estado==='UTILIZADA').length||0;
+    const {count:vend} = await sb.from('entradas').select('id',{count:'exact',head:true});
     const {data:cfg} = await sb.from('configuracion').select('aforo').eq('id',1).maybeSingle();
     const {data:comps} = await sb.from('compradores').select('cantidad,estado,expira_en');
     const reservado = (comps||[]).reduce((acc,c)=>{
@@ -202,9 +198,7 @@ async function cargarContador(){
       return activo ? acc+(c.cantidad||0) : acc;
     },0);
     const aforo = cfg?.aforo ?? 0;
-    document.getElementById('cVendidas').textContent = vend;
-    document.getElementById('cUtilizadas').textContent = util;
-    document.getElementById('cDisponibles').textContent = Math.max(0, aforo-vend-reservado);
+    document.getElementById('cDisponibles').textContent = Math.max(0, aforo-(vend||0)-reservado);
   }catch(e){ console.warn(e); }
 }
 
