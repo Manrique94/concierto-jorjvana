@@ -60,9 +60,10 @@
         <h2>📊 Estadísticas</h2>
         <div class="stats">
           <div class="s"><b id="sVend">0</b><span>Vendidas</span></div>
+          <div class="s"><b id="sRecau">S/ 0</b><span>Recaudación</span></div>
           <div class="s"><b id="sUtil">0</b><span>Utilizadas</span></div>
           <div class="s"><b id="sDisp">500</b><span>Disponibles</span></div>
-          <div class="s"><b id="sRecau">S/ 0</b><span>Recaudación</span></div>
+          <div class="s"><b id="sAnul">0</b><span>Anuladas</span></div>
         </div>
         <div class="toolbar" style="margin-top:14px">
           <label for="fAforo" style="align-self:center">Aforo total (entradas disponibles para la venta)</label>
@@ -106,6 +107,24 @@
         </div>
       </div>
 
+      <div class="card">
+        <h2>🎟 Tabla de ventas</h2>
+        <div class="toolbar">
+          <input id="buscarVentas" placeholder="Buscar por nombre, DNI o código" oninput="renderVentas()" style="flex:1;min-width:220px">
+          <button class="btn sm sec" onclick="exportVentasExcel()">⬇ Exportar Excel</button>
+        </div>
+        <div id="msgVentas"></div>
+        <div style="overflow-x:auto">
+          <table id="tblVentas">
+            <thead><tr>
+              <th>Nombre</th><th>DNI</th><th>Tipo</th><th>Código</th>
+              <th>Estado</th><th>Fecha de compra</th><th>Acciones</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
       <div class="card" id="entradasCard" style="display:none">
         <h2>🎟 Entradas generadas <span class="muted" id="entradasDe"></span></h2>
         <div class="toolbar">
@@ -127,6 +146,7 @@
 let AFORO = 500;
 let compradores = [], entradasActuales = [], compradorActual = null;
 let validadores = [];
+let ventas = [];
 
 function init(){
   initSupabase();
@@ -177,14 +197,17 @@ async function loadAdmin(){
   // estadísticas
   const {data:ents}=await sb.from('entradas').select('estado');
   const vend=ents?.length||0, util=ents?.filter(e=>e.estado==='UTILIZADA').length||0;
+  const anul=ents?.filter(e=>e.estado==='ANULADA').length||0;
   const recau=compradores.filter(c=>c.estado==='APROBADO').reduce((a,c)=>a+ +c.total,0);
   const {data:disp}=await sb.rpc('contar_disponibles');
   document.getElementById('sVend').textContent=vend;
   document.getElementById('sUtil').textContent=util;
+  document.getElementById('sAnul').textContent=anul;
   document.getElementById('sDisp').textContent=disp ?? Math.max(0, AFORO-vend);
   document.getElementById('fAforo').value=AFORO;
   document.getElementById('sRecau').textContent='S/ '+recau.toFixed(0);
   cargarValidadores();
+  loadVentas();
 }
 
 /* ---------- Validadores de QR (acceso a "Validar QR") ---------- */
@@ -310,6 +333,122 @@ async function eliminarCompra(id){
     }
     await loadAdmin();
   }catch(e){ alert('Error: '+e.message); }
+}
+
+/* ---------- Tabla de ventas (entradas individuales) ---------- */
+async function loadVentas(){
+  if(!sb) return;
+  const {data}=await sb.from('entradas')
+    .select('*, compradores(nombre,dni,correo,celular,codigo_pago)')
+    .order('numero',{ascending:false});
+  ventas=data||[];
+  renderVentas();
+}
+
+function estadoBadge(estado){
+  if(estado==='UTILIZADA') return {label:'Usado', cls:'b-util'};
+  if(estado==='ANULADA') return {label:'Anulado', cls:'b-anula'};
+  return {label:'Válido', cls:'b-valida'};
+}
+
+function filtrarVentas(){
+  const q=document.getElementById('buscarVentas').value.toLowerCase();
+  if(!q) return ventas;
+  return ventas.filter(v=>{
+    const nombre=(v.compradores?.nombre||v.nombre_asistente||'').toLowerCase();
+    const dni=v.compradores?.dni||'';
+    return nombre.includes(q)||dni.includes(q)||v.codigo.toLowerCase().includes(q);
+  });
+}
+
+function renderVentas(){
+  const tb=document.querySelector('#tblVentas tbody'); tb.innerHTML='';
+  filtrarVentas().forEach(v=>{
+    const b=estadoBadge(v.estado);
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td>${v.compradores?.nombre||v.nombre_asistente}</td>
+      <td>${v.compradores?.dni||'-'}</td>
+      <td>General</td>
+      <td style="font-family:monospace">${v.codigo}</td>
+      <td><span class="badge ${b.cls}">${b.label}</span></td>
+      <td>${new Date(v.fecha_compra).toLocaleString('es-PE')}</td>
+      <td></td>`;
+    const acc=tr.lastElementChild;
+    const ver=document.createElement('button'); ver.className='btn sm blue'; ver.textContent='Ver ticket'; ver.onclick=()=>verTicketFila(v);
+    acc.appendChild(ver);
+    if(v.compradores?.correo){
+      const re=document.createElement('button'); re.className='btn sm amber'; re.style.marginLeft='4px'; re.textContent='Reenviar'; re.onclick=()=>reenviarTicketFila(v);
+      acc.appendChild(re);
+    }
+    if(v.estado!=='ANULADA'){
+      const an=document.createElement('button'); an.className='btn sm'; an.style.marginLeft='4px'; an.style.background='#777'; an.textContent='Anular'; an.onclick=()=>anularEntrada(v);
+      acc.appendChild(an);
+    }
+    tb.appendChild(tr);
+  });
+}
+
+function verTicketFila(v){
+  compradorActual={
+    nombre: v.compradores?.nombre||v.nombre_asistente,
+    correo: v.compradores?.correo,
+    celular: v.compradores?.celular,
+    codigo_pago: v.compradores?.codigo_pago||''
+  };
+  entradasActuales=[v];
+  document.getElementById('entradasCard').style.display='block';
+  document.getElementById('entradasDe').textContent='· '+compradorActual.nombre+' ('+v.codigo+')';
+  renderTickets(entradasActuales,document.getElementById('ticketsArea'));
+  document.getElementById('entradasCard').scrollIntoView({behavior:'smooth'});
+}
+
+async function reenviarTicketFila(v){
+  const correo=v.compradores?.correo;
+  if(!correo){ alert('Este comprador no tiene correo registrado.'); return; }
+  msg('msgVentas','Reenviando ticket '+v.codigo+' a '+correo+'...','ok');
+  try{
+    const codigoPago=v.compradores?.codigo_pago||'';
+    const resp=await fetch('/api/enviar-entradas',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        nombre:v.compradores?.nombre||v.nombre_asistente,
+        correo,
+        codigos:[v.codigo],
+        codigoPago,
+        urlConsulta:`${location.origin}/index.html?codigo_pago=${encodeURIComponent(codigoPago)}#consulta`,
+        evento:{fecha:'17 de Julio 2026', hora:'7:00 PM', lugar:'C.C. Vida Abundante'}
+      })
+    });
+    const data=await resp.json().catch(()=>({}));
+    if(!resp.ok || !data.ok) throw new Error(data.error||'No se pudo enviar el correo.');
+    msg('msgVentas','✅ Ticket '+v.codigo+' enviado a '+correo,'ok');
+  }catch(e){
+    msg('msgVentas','❌ Error al reenviar: '+e.message,'err');
+  }
+}
+
+async function anularEntrada(v){
+  if(!confirm('¿Anular la entrada '+v.codigo+'? Esta acción no se puede deshacer desde aquí.')) return;
+  const {error}=await sb.from('entradas').update({estado:'ANULADA'}).eq('id',v.id);
+  if(error){ msg('msgVentas','Error al anular: '+error.message,'err'); return; }
+  msg('msgVentas','Entrada '+v.codigo+' anulada.','ok');
+  await loadAdmin();
+}
+
+function exportVentasExcel(){
+  const rows=filtrarVentas().map(v=>({
+    Nombre:v.compradores?.nombre||v.nombre_asistente,
+    DNI:v.compradores?.dni||'',
+    Tipo:'General',
+    Codigo:v.codigo,
+    Estado:estadoBadge(v.estado).label,
+    Fecha:new Date(v.fecha_compra).toLocaleString('es-PE')
+  }));
+  const ws=XLSX.utils.json_to_sheet(rows);
+  const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Ventas');
+  XLSX.writeFile(wb,'ventas_jorjvana.xlsx');
 }
 
 function renderTickets(entradas,areaEl){
