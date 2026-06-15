@@ -177,7 +177,8 @@ function consultar(){ consultarCodigo(document.getElementById('fCodigo').value.t
 async function consultarCodigo(code){
   if(!sb||!code) return;
   ultimoCodigo=code;
-  const {data}=await sb.from('entradas').select('*').eq('codigo',code).maybeSingle();
+  const {data:raw}=await sb.rpc('consultar_entrada',{p_codigo:code});
+  const data=unwrapRpc(raw);
   const box=document.getElementById('scanResult');
   const ingBtn=document.getElementById('srIngresar');
   box.className='scan-result show';
