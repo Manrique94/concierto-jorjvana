@@ -6,8 +6,7 @@
 body{font-family:'Segoe UI',system-ui,Arial,sans-serif;color:var(--negro);line-height:1.5;position:relative;min-height:100vh}
 /* Fondo fijo con la imagen del concierto */
 body::before{content:"";position:fixed;inset:0;z-index:-2;
-  background:url('../assets/images/concierto.jpg') center/cover no-repeat fixed;
-  filter:blur(3px) brightness(.55);transform:scale(1.05)}
+background:url('../assets/images/concierto.jpg') center/cover no-repeat fixed;  filter:blur(3px) brightness(.55);transform:scale(1.05)}
 body::after{content:"";position:fixed;inset:0;z-index:-1;
   background:linear-gradient(180deg,rgba(0,0,0,.45),rgba(20,20,25,.78))}
 img{max-width:100%;display:block}
@@ -108,17 +107,6 @@ th{background:var(--gris);font-size:12px;text-transform:uppercase;color:#555}
 .scan-result.show{display:block}
 .scan-result h2{font-size:30px;margin-bottom:6px}
 .sr-valida{background:var(--verde)} .sr-util{background:var(--azul)} .sr-anula{background:#555} .sr-noex{background:var(--rojo)}
-
-.access-overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:9999;color:#fff;text-align:center;padding:24px;cursor:pointer}
-.access-overlay.show{display:flex;animation:accessFade .15s ease-out}
-.access-overlay.ok{background:var(--verde)}
-.access-overlay.deny{background:var(--rojo)}
-.access-icon{font-size:110px;line-height:1}
-.access-title{font-size:46px;font-weight:800;letter-spacing:1px;margin-top:8px}
-.access-sub{font-size:22px;margin-top:14px;opacity:.95}
-.access-hint{font-size:13px;margin-top:30px;opacity:.7}
-@keyframes accessFade{from{opacity:0}to{opacity:1}}
-@media(max-width:560px){.access-icon{font-size:80px}.access-title{font-size:34px}.access-sub{font-size:18px}}
 
 #reader{max-width:360px;margin:14px auto;border-radius:12px;overflow:hidden}
 .muted{color:#666;font-size:13px}
