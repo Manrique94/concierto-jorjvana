@@ -195,14 +195,14 @@ async function cargarContador(){
   if(!sb) return;
   try{
     const {count:vend} = await sb.from('entradas').select('id',{count:'exact',head:true});
-    const {data:cfg} = await sb.from('configuracion').select('aforo').eq('id',1).maybeSingle();
+    const {data:aforoVal} = await sb.rpc('obtener_aforo');
     const {data:comps} = await sb.from('compradores').select('cantidad,estado,expira_en');
     const reservado = (comps||[]).reduce((acc,c)=>{
       const activo = c.estado==='PENDIENTE' || c.estado==='PENDIENTE_APROBACION'
         || (c.estado==='RESERVADO' && c.expira_en && new Date(c.expira_en)>new Date());
       return activo ? acc+(c.cantidad||0) : acc;
     },0);
-    const aforo = cfg?.aforo ?? 0;
+    const aforo = aforoVal ?? 0;
     document.getElementById('cDisponibles').textContent = Math.max(0, aforo-(vend||0)-reservado);
   }catch(e){ console.warn(e); }
 }

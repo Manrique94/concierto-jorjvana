@@ -158,8 +158,8 @@ function init(){
 async function cargarAforo(){
   if(!sb) return;
   try{
-    const {data} = await sb.from('configuracion').select('aforo').eq('id',1).single();
-    if(data?.aforo) AFORO = data.aforo;
+    const {data} = await sb.rpc('obtener_aforo');
+    if(data) AFORO = data;
   }catch(e){ console.warn(e); }
 }
 
@@ -173,7 +173,7 @@ async function guardarAforo(){
     msg('msgAforo',`No puede ser menor a las ${vendidas} entradas ya vendidas.`,'err');
     return;
   }
-  const {error} = await sb.from('configuracion').update({aforo:valor}).eq('id',1);
+  const {error} = await sb.rpc('admin_actualizar_aforo',{p_admin_key:ADMIN_KEY, p_aforo:valor});
   if(error){ msg('msgAforo','Error al guardar: '+error.message,'err'); return; }
   AFORO = valor;
   msg('msgAforo','Aforo actualizado correctamente.','ok');
