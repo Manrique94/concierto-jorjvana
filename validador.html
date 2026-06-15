@@ -135,14 +135,17 @@ function checkValidadorSession(){
 async function loginValidador(){
   const code=document.getElementById('validarCodigo').value.trim();
   if(!code){ msg('msgValidarLogin','Ingresa el código de acceso.','err'); return; }
-  if(code===ADMIN_PASS){
+  if(!sb){ msg('msgValidarLogin','Base de datos no configurada.','err'); return; }
+
+  const {data:esAdmin}=await sb.rpc('verificar_admin',{p_admin_key:code});
+  if(esAdmin){
     sessionStorage.setItem('validadorNombre','Administrador');
     checkValidadorSession();
     return;
   }
-  if(!sb){ msg('msgValidarLogin','Base de datos no configurada.','err'); return; }
-  const {data}=await sb.from('validadores').select('*').eq('clave',code.toUpperCase()).eq('activo',true).maybeSingle();
-  if(!data){ msg('msgValidarLogin','Código incorrecto o inactivo. Pide uno nuevo al administrador.','err'); return; }
+
+  const {data,error}=await sb.rpc('verificar_validador',{p_clave:code});
+  if(error || !data?.valido){ msg('msgValidarLogin','Código incorrecto o inactivo. Pide uno nuevo al administrador.','err'); return; }
   sessionStorage.setItem('validadorNombre',data.nombre);
   checkValidadorSession();
 }

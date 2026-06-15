@@ -147,6 +147,7 @@ let AFORO = 500;
 let compradores = [], entradasActuales = [], compradorActual = null;
 let validadores = [];
 let ventas = [];
+let ADMIN_KEY = null;
 
 function init(){
   initSupabase();
@@ -180,12 +181,15 @@ async function guardarAforo(){
 }
 
 /* ---------- Admin ---------- */
-function loginAdmin(){
-  if(document.getElementById('adminPass').value===ADMIN_PASS){
-    document.getElementById('adminLogin').classList.add('hidden');
-    document.getElementById('adminPanel').classList.remove('hidden');
-    loadAdmin();
-  }else{ msg('msgLogin','Clave incorrecta.','err'); }
+async function loginAdmin(){
+  if(!sb){ msg('msgLogin','Base de datos no configurada.','err'); return; }
+  const pass=document.getElementById('adminPass').value;
+  const {data,error}=await sb.rpc('verificar_admin',{p_admin_key:pass});
+  if(error || !data){ msg('msgLogin','Clave incorrecta.','err'); return; }
+  ADMIN_KEY=pass;
+  document.getElementById('adminLogin').classList.add('hidden');
+  document.getElementById('adminPanel').classList.remove('hidden');
+  loadAdmin();
 }
 
 async function loadAdmin(){
@@ -213,7 +217,8 @@ async function loadAdmin(){
 /* ---------- Validadores de QR (acceso a "Validar QR") ---------- */
 async function cargarValidadores(){
   if(!sb) return;
-  const {data}=await sb.from('validadores').select('*').order('creado_en',{ascending:true});
+  const {data,error}=await sb.rpc('admin_listar_validadores',{p_admin_key:ADMIN_KEY});
+  if(error){ console.warn(error); validadores=[]; renderValidadores(); return; }
   validadores=data||[];
   renderValidadores();
 }
@@ -251,9 +256,7 @@ async function agregarValidador(){
   let clave=document.getElementById('fValClave').value.trim().toUpperCase();
   if(!nombre){ msg('msgValidador','Ingresa el nombre del validador.','err'); return; }
   if(!clave){ clave=generarCodigoValidador(); }
-  const codigo=clave;
-  console.log({nombre, codigo, clave});
-  const {error}=await sb.from('validadores').insert({nombre,codigo,clave,activo:true});
+  const {error}=await sb.rpc('admin_crear_validador',{p_admin_key:ADMIN_KEY, p_nombre:nombre, p_clave:clave});
   if(error){ msg('msgValidador','Error: '+error.message,'err'); return; }
   document.getElementById('fValNombre').value='';
   document.getElementById('fValClave').value='';
@@ -262,13 +265,13 @@ async function agregarValidador(){
 }
 
 async function toggleValidador(id,activo){
-  await sb.from('validadores').update({activo}).eq('id',id);
+  await sb.rpc('admin_set_validador_activo',{p_admin_key:ADMIN_KEY, p_id:id, p_activo:activo});
   cargarValidadores();
 }
 
 async function eliminarValidador(id){
   if(!confirm('¿Eliminar este validador? Su código dejará de funcionar.')) return;
-  await sb.from('validadores').delete().eq('id',id);
+  await sb.rpc('admin_eliminar_validador',{p_admin_key:ADMIN_KEY, p_id:id});
   cargarValidadores();
 }
 
@@ -306,7 +309,7 @@ function renderCompradores(){
 
 async function aprobar(id){
   if(!confirm('¿Aprobar pago y generar entradas?')) return;
-  const {error}=await sb.rpc('aprobar_pago',{p_comprador:id});
+  const {error}=await sb.rpc('aprobar_pago',{p_comprador:id, p_admin_key:ADMIN_KEY});
   if(error){ alert('Error: '+error.message); return; }
   await loadAdmin();
   alert('Pago aprobado. Entradas generadas.');
@@ -320,7 +323,7 @@ async function rechazar(id){
 async function eliminarCompra(id){
   if(!confirm('¿Eliminar esta compra? Esta acción no se puede deshacer.')) return;
   try{
-    const {data,error}=await sb.rpc('eliminar_compra',{p_comprador:id});
+    const {data,error}=await sb.rpc('eliminar_compra',{p_comprador:id, p_admin_key:ADMIN_KEY});
     if(error) throw error;
     const res=unwrapRpc(data);
     if(res?.comprobante_url){
