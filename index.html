@@ -8,7 +8,10 @@
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <!-- QR -->
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script type="module">
+  import QRCode from "https://cdn.jsdelivr.net/npm/qrcode@1.5.3/+esm";
+  window.QRCode = QRCode;
+</script>
 
 <link rel="stylesheet" href="css/style.css">
 </head>
@@ -194,16 +197,8 @@ function goto(page){
 async function cargarContador(){
   if(!sb) return;
   try{
-    const {count:vend} = await sb.from('entradas').select('id',{count:'exact',head:true});
-    const {data:aforoVal} = await sb.rpc('obtener_aforo');
-    const {data:comps} = await sb.from('compradores').select('cantidad,estado,expira_en');
-    const reservado = (comps||[]).reduce((acc,c)=>{
-      const activo = c.estado==='PENDIENTE' || c.estado==='PENDIENTE_APROBACION'
-        || (c.estado==='RESERVADO' && c.expira_en && new Date(c.expira_en)>new Date());
-      return activo ? acc+(c.cantidad||0) : acc;
-    },0);
-    const aforo = aforoVal ?? 0;
-    document.getElementById('cDisponibles').textContent = Math.max(0, aforo-(vend||0)-reservado);
+    const {data:disp} = await sb.rpc('contar_disponibles');
+    document.getElementById('cDisponibles').textContent = disp ?? 0;
   }catch(e){ console.warn(e); }
 }
 
@@ -352,10 +347,11 @@ async function consultarCompra(){
   document.getElementById('consultaResultado').innerHTML='';
 
   try{
-    const {data,error}=await sb.from('compradores').select('*').eq('codigo_pago',codigo).eq('dni',dni).maybeSingle();
+    const {data,error}=await sb.rpc('consultar_compra',{p_codigo_pago:codigo,p_dni:dni});
     if(error) throw error;
-    if(!data){ msg('msgConsulta','No se encontró ninguna compra con ese código de pago y DNI.','err'); return; }
-    await renderResultadoConsulta(data);
+    const comprador=unwrapRpc(data);
+    if(!comprador){ msg('msgConsulta','No se encontró ninguna compra con ese código de pago y DNI.','err'); return; }
+    await renderResultadoConsulta(comprador);
   }catch(e){ msg('msgConsulta','Error: '+e.message,'err'); }
 }
 
@@ -401,10 +397,9 @@ async function renderResultadoConsulta(c){
   if(c.estado==='APROBADO'){
     card.innerHTML=`<h2>✅ Pago aprobado</h2><p>Tus entradas están listas. Presenta el código QR en el ingreso.</p>`;
     area.appendChild(card);
-    const {data:entradas}=await sb.from('entradas').select('*').eq('comprador_id',c.id).order('numero');
     const ticketsArea=document.createElement('div');
     area.appendChild(ticketsArea);
-    renderTickets(entradas||[],ticketsArea);
+    renderTickets(c.entradas||[],ticketsArea);
     return;
   }
 

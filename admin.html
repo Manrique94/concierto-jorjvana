@@ -167,8 +167,8 @@ async function guardarAforo(){
   if(!sb) return;
   const valor = parseInt(document.getElementById('fAforo').value, 10);
   if(!valor || valor < 1){ msg('msgAforo','Ingresa una cantidad válida.','err'); return; }
-  const {count} = await sb.from('entradas').select('id',{count:'exact',head:true});
-  const vendidas = count || 0;
+  const {data:statsRaw} = await sb.rpc('admin_estadisticas',{p_admin_key:ADMIN_KEY});
+  const vendidas = unwrapRpc(statsRaw)?.vendidas || 0;
   if(valor < vendidas){
     msg('msgAforo',`No puede ser menor a las ${vendidas} entradas ya vendidas.`,'err');
     return;
@@ -195,21 +195,18 @@ async function loginAdmin(){
 async function loadAdmin(){
   if(!sb) return;
   await sb.rpc('limpiar_reservas_expiradas');
-  const {data:comp}=await sb.from('compradores').select('*').order('created_at',{ascending:false});
+  const {data:comp}=await sb.rpc('admin_listar_compradores',{p_admin_key:ADMIN_KEY});
   compradores=comp||[];
   renderCompradores();
   // estadísticas
-  const {data:ents}=await sb.from('entradas').select('estado');
-  const vend=ents?.length||0, util=ents?.filter(e=>e.estado==='UTILIZADA').length||0;
-  const anul=ents?.filter(e=>e.estado==='ANULADA').length||0;
-  const recau=compradores.filter(c=>c.estado==='APROBADO').reduce((a,c)=>a+ +c.total,0);
-  const {data:disp}=await sb.rpc('contar_disponibles');
-  document.getElementById('sVend').textContent=vend;
-  document.getElementById('sUtil').textContent=util;
-  document.getElementById('sAnul').textContent=anul;
-  document.getElementById('sDisp').textContent=disp ?? Math.max(0, AFORO-vend);
+  const {data:statsRaw}=await sb.rpc('admin_estadisticas',{p_admin_key:ADMIN_KEY});
+  const stats=unwrapRpc(statsRaw)||{};
+  document.getElementById('sVend').textContent=stats.vendidas ?? 0;
+  document.getElementById('sUtil').textContent=stats.utilizadas ?? 0;
+  document.getElementById('sAnul').textContent=stats.anuladas ?? 0;
+  document.getElementById('sDisp').textContent=stats.disponibles ?? Math.max(0, AFORO-(stats.vendidas??0));
   document.getElementById('fAforo').value=AFORO;
-  document.getElementById('sRecau').textContent='S/ '+recau.toFixed(0);
+  document.getElementById('sRecau').textContent='S/ '+(+(stats.recaudacion??0)).toFixed(0);
   cargarValidadores();
   loadVentas();
 }
@@ -316,7 +313,8 @@ async function aprobar(id){
 }
 async function rechazar(id){
   if(!confirm('¿Rechazar este pago?')) return;
-  await sb.from('compradores').update({estado:'RECHAZADO',fecha_revision:new Date().toISOString()}).eq('id',id);
+  const {error}=await sb.rpc('admin_rechazar_pago',{p_admin_key:ADMIN_KEY, p_comprador:id});
+  if(error){ alert('Error: '+error.message); return; }
   loadAdmin();
 }
 
@@ -341,9 +339,8 @@ async function eliminarCompra(id){
 /* ---------- Tabla de ventas (entradas individuales) ---------- */
 async function loadVentas(){
   if(!sb) return;
-  const {data}=await sb.from('entradas')
-    .select('*, compradores(nombre,dni,correo,celular,codigo_pago)')
-    .order('numero',{ascending:false});
+  const {data,error}=await sb.rpc('admin_listar_ventas',{p_admin_key:ADMIN_KEY});
+  if(error){ console.warn(error); ventas=[]; renderVentas(); return; }
   ventas=data||[];
   renderVentas();
 }
@@ -434,7 +431,7 @@ async function reenviarTicketFila(v){
 
 async function anularEntrada(v){
   if(!confirm('¿Anular la entrada '+v.codigo+'? Esta acción no se puede deshacer desde aquí.')) return;
-  const {error}=await sb.from('entradas').update({estado:'ANULADA'}).eq('id',v.id);
+  const {error}=await sb.rpc('admin_anular_entrada',{p_admin_key:ADMIN_KEY, p_entrada:v.id});
   if(error){ msg('msgVentas','Error al anular: '+error.message,'err'); return; }
   msg('msgVentas','Entrada '+v.codigo+' anulada.','ok');
   await loadAdmin();
@@ -474,7 +471,7 @@ function renderTickets(entradas,areaEl){
 
 async function verEntradas(c){
   compradorActual=c;
-  const {data}=await sb.from('entradas').select('*').eq('comprador_id',c.id).order('numero');
+  const {data}=await sb.rpc('admin_obtener_entradas',{p_admin_key:ADMIN_KEY, p_comprador:c.id});
   entradasActuales=data||[];
   document.getElementById('entradasCard').style.display='block';
   document.getElementById('entradasDe').textContent='· '+c.nombre;
