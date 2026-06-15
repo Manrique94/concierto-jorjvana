@@ -185,7 +185,7 @@ async function consultarCodigo(code){
     box.classList.add('sr-noex'); document.getElementById('srTitle').textContent='❌ NO EXISTE';
     document.getElementById('srNombre').textContent=''; document.getElementById('srCodigo').textContent=code;
     document.getElementById('srFecha').textContent=''; ingBtn.style.display='none';
-    await sb.from('validaciones').insert({codigo:code,resultado:'NO_EXISTE',accion:'CONSULTA'});
+    await sb.rpc('registrar_consulta_no_existe',{p_codigo:code});
     showAccess(false,'CÓDIGO NO EXISTE');
     return;
   }
