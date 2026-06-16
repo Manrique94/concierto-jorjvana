@@ -114,7 +114,13 @@
       </div>
 
       <label style="margin-top:16px">Sube tu captura de pago (Yape) *</label>
-      <input type="file" id="fComprob" accept="image/*" onchange="previewComprobante()">
+      <div class="pay-grid" style="margin-top:8px">
+        <button type="button" class="btn sec" onclick="document.getElementById('fCelCamara').click()">📷 Tomar foto</button>
+        <button type="button" class="btn sec" onclick="document.getElementById('fCelGaleria').click()">🖼️ Subir captura</button>
+      </div>
+      <input type="file" id="fCelCamara" accept="image/*" capture="environment" class="hidden" onchange="transferirArchivo(this)">
+      <input type="file" id="fCelGaleria" accept="image/*" class="hidden" onchange="transferirArchivo(this)">
+      <input type="file" id="fComprob" accept="image/*" class="hidden">
       <div id="comprobPreview" class="comprob-preview"></div>
 
       <div class="center" style="margin-top:20px">
@@ -253,6 +259,13 @@ function mostrarPaso2(){
     document.getElementById('fComprob').disabled=true;
     document.getElementById('btnComprobante').disabled=true;
   });
+}
+
+function transferirArchivo(src){
+  const dt=new DataTransfer();
+  if(src.files[0]) dt.items.add(src.files[0]);
+  document.getElementById('fComprob').files=dt.files;
+  previewComprobante();
 }
 
 function previewComprobante(){
