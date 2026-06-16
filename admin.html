@@ -413,6 +413,7 @@ async function reenviarTicketFila(v){
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
+        adminKey:ADMIN_KEY,
         nombre:v.compradores?.nombre||v.nombre_asistente,
         correo,
         codigos:[v.codigo],
@@ -559,6 +560,7 @@ async function enviarCorreo(){
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
+        adminKey:ADMIN_KEY,
         nombre:compradorActual.nombre,
         correo:compradorActual.correo,
         codigos:entradasActuales.map(e=>e.codigo),
