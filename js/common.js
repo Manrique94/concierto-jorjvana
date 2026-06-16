@@ -30,3 +30,6 @@ function togglePasswordField(inputId,btnId){
 function unwrapRpc(data){
   return Array.isArray(data) ? data[0] : data;
 }
+
+function esc(s){ return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+function safeUrl(u){ return typeof u==='string'&&/^https?:\/\//i.test(u)?u:'#'; }

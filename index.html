@@ -379,7 +379,7 @@ async function renderResultadoConsulta(c){
     if(restante>0){
       card.innerHTML=`
         <h2>⏳ Reserva pendiente de pago</h2>
-        <p>Código de pago: <b>${c.codigo_pago}</b></p>
+        <p>Código de pago: <b>${esc(c.codigo_pago)}</b></p>
         <p>Monto: <b>S/ ${(+c.total).toFixed(2)}</b></p>
         <p class="muted">Tiempo restante para subir tu comprobante: <b id="cCountdown"></b></p>
         <div class="center" style="margin-top:14px"><button class="btn" id="btnReanudar">Subir comprobante ahora</button></div>`;
@@ -402,8 +402,8 @@ async function renderResultadoConsulta(c){
     card.innerHTML=`
       <h2>🕒 Pendiente de aprobación</h2>
       <p>Recibimos tu comprobante. Tu compra está siendo revisada.</p>
-      <p>Código de pago: <b>${c.codigo_pago}</b></p>
-      ${c.comprobante_url?`<div class="comprob-preview"><img src="${c.comprobante_url}" alt="Comprobante"></div>`:''}`;
+      <p>Código de pago: <b>${esc(c.codigo_pago)}</b></p>
+      ${c.comprobante_url?`<div class="comprob-preview"><img src="${safeUrl(c.comprobante_url)}" alt="Comprobante"></div>`:''}`;
     area.appendChild(card);
     return;
   }
@@ -438,11 +438,11 @@ function renderTickets(entradas,areaEl){
         <h3>JORJVANA</h3>
         <small>Concierto Acústico · 17 Julio 2026 · 7:00 PM</small><br>
         <small>C.C. Vida Abundante</small>
-        <p style="margin-top:8px"><b>${e.nombre_asistente}</b></p>
-        <p class="muted">Entrada N° ${e.numero}</p>
-        <p class="code">${e.codigo}</p>
+        <p style="margin-top:8px"><b>${esc(e.nombre_asistente)}</b></p>
+        <p class="muted">Entrada N° ${esc(e.numero)}</p>
+        <p class="code">${esc(e.codigo)}</p>
       </div>
-      <div class="right"><canvas id="qr_${e.codigo}"></canvas><div class="code">${e.codigo}</div></div>`;
+      <div class="right"><canvas id="qr_${esc(e.codigo)}"></canvas><div class="code">${esc(e.codigo)}</div></div>`;
     areaEl.appendChild(div);
     QRCode.toCanvas(document.getElementById('qr_'+e.codigo), e.codigo, {width:140});
   }

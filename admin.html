@@ -226,8 +226,8 @@ function renderValidadores(){
   validadores.forEach(v=>{
     const tr=document.createElement('tr');
     tr.innerHTML=`
-      <td>${v.nombre}</td>
-      <td style="font-family:monospace">${v.clave}</td>
+      <td>${esc(v.nombre)}</td>
+      <td style="font-family:monospace">${esc(v.clave)}</td>
       <td><span class="badge ${v.activo?'b-aprob':'b-rech'}">${v.activo?'ACTIVO':'INACTIVO'}</span></td>
       <td></td>`;
     const acc=tr.lastElementChild;
@@ -282,10 +282,10 @@ function renderCompradores(){
       : 'b-pend';
     const tr=document.createElement('tr');
     tr.innerHTML=`
-      <td>${c.nombre}</td><td>${c.dni}</td><td>${c.celular}</td>
-      <td>${c.cantidad}</td><td>S/ ${(+c.total).toFixed(2)}</td><td>${c.metodo_pago||'-'}</td>
-      <td><span class="badge ${bcls}">${c.estado}</span>${c.codigo_pago?`<br><small class="muted">${c.codigo_pago}</small>`:''}</td>
-      <td>${c.comprobante_url?`<a href="${c.comprobante_url}" target="_blank">ver</a>`:'-'}</td>
+      <td>${esc(c.nombre)}</td><td>${esc(c.dni)}</td><td>${esc(c.celular)}</td>
+      <td>${esc(c.cantidad)}</td><td>S/ ${(+c.total).toFixed(2)}</td><td>${esc(c.metodo_pago||'-')}</td>
+      <td><span class="badge ${bcls}">${esc(c.estado)}</span>${c.codigo_pago?`<br><small class="muted">${esc(c.codigo_pago)}</small>`:''}</td>
+      <td>${c.comprobante_url?`<a href="${safeUrl(c.comprobante_url)}" target="_blank" rel="noopener">ver</a>`:'-'}</td>
       <td></td>`;
     const acc=tr.lastElementChild;
     if(c.estado==='PENDIENTE'||c.estado==='PENDIENTE_APROBACION'){
@@ -367,10 +367,10 @@ function renderVentas(){
     const b=estadoBadge(v.estado);
     const tr=document.createElement('tr');
     tr.innerHTML=`
-      <td>${v.compradores?.nombre||v.nombre_asistente}</td>
-      <td>${v.compradores?.dni||'-'}</td>
+      <td>${esc(v.compradores?.nombre||v.nombre_asistente)}</td>
+      <td>${esc(v.compradores?.dni||'-')}</td>
       <td>General</td>
-      <td style="font-family:monospace">${v.codigo}</td>
+      <td style="font-family:monospace">${esc(v.codigo)}</td>
       <td><span class="badge ${b.cls}">${b.label}</span></td>
       <td>${new Date(v.fecha_compra).toLocaleString('es-PE')}</td>
       <td></td>`;
@@ -459,11 +459,11 @@ function renderTickets(entradas,areaEl){
         <h3>JORJVANA</h3>
         <small>Concierto Acústico · 17 Julio 2026 · 7:00 PM</small><br>
         <small>C.C. Vida Abundante</small>
-        <p style="margin-top:8px"><b>${e.nombre_asistente}</b></p>
-        <p class="muted">Entrada N° ${e.numero}</p>
-        <p class="code">${e.codigo}</p>
+        <p style="margin-top:8px"><b>${esc(e.nombre_asistente)}</b></p>
+        <p class="muted">Entrada N° ${esc(e.numero)}</p>
+        <p class="code">${esc(e.codigo)}</p>
       </div>
-      <div class="right"><canvas id="qr_${e.codigo}"></canvas><div class="code">${e.codigo}</div></div>`;
+      <div class="right"><canvas id="qr_${esc(e.codigo)}"></canvas><div class="code">${esc(e.codigo)}</div></div>`;
     areaEl.appendChild(div);
     QRCode.toCanvas(document.getElementById('qr_'+e.codigo), e.codigo, {width:140});
   }
