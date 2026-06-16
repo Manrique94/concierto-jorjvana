@@ -71,7 +71,7 @@
           <div><label>DNI *</label><input id="fDni" maxlength="8" placeholder="12345678"></div>
         </div>
         <div class="row">
-          <div><label>Celular *</label><input id="fCel" placeholder="987654321"></div>
+          <div><label>Celular *</label><input id="fCel" type="tel" inputmode="numeric" maxlength="9" placeholder="987654321" oninput="this.value=this.value.replace(/\D/g,'').slice(0,9)"></div>
           <div><label>Correo *</label><input id="fMail" type="email" placeholder="correo@ejemplo.com"></div>
         </div>
         <div class="row">
@@ -114,7 +114,7 @@
       </div>
 
       <label style="margin-top:16px">Sube tu captura de pago (Yape) *</label>
-      <input type="file" id="fComprob" accept="image/*" capture="environment" onchange="previewComprobante()">
+      <input type="file" id="fComprob" accept="image/*" onchange="previewComprobante()">
       <div id="comprobPreview" class="comprob-preview"></div>
 
       <div class="center" style="margin-top:20px">
@@ -218,6 +218,7 @@ async function crearReserva(){
 
   if(!nombre||!dni||!cel||!mail){ msg('msgComprar1','Completa nombre, DNI, celular y correo.','err'); return; }
   if(dni.length!==8){ msg('msgComprar1','El DNI debe tener 8 dígitos.','warn'); return; }
+  if(!/^9\d{8}$/.test(cel)){ msg('msgComprar1','El celular debe tener 9 dígitos y empezar con 9.','warn'); return; }
 
   const btn=document.getElementById('btnReservar'); btn.disabled=true; btn.textContent='Procesando...';
   try{
