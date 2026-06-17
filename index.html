@@ -100,8 +100,7 @@
       <div class="pago-qr">
         <div class="q">
           <h4>Yape</h4>
-          <div class="ph" id="qrYape">Coloca tu QR de Yape<br>(reemplaza en /yape.jpg)</div>
-          <p class="muted" style="margin-top:8px">Nº: 987 654 321</p>
+          <div class="ph" id="qrYape">Coloca tu QR de Yape<br>(reemplaza en /assets/images/qr-yape.jpeg)</div>
         </div>
       </div>
 
@@ -177,7 +176,7 @@ function init(){
   initSupabase();
   if(sb) cargarContador();
   calcTotal();
-  fetch('assets/images/yape.jpg').then(r=>{ if(r.ok) document.getElementById('qrYape').innerHTML='<img src="assets/images/yape.jpg" style="max-height:140px;margin:auto">'; });
+  fetch('assets/images/qr-yape.jpeg').then(r=>{ if(r.ok) document.getElementById('qrYape').innerHTML='<img src="assets/images/qr-yape.jpeg" alt="QR de Yape">'; });
 
   const params = new URLSearchParams(location.search);
   const codigoPago = params.get('codigo_pago');

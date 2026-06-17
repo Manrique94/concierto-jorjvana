@@ -248,9 +248,14 @@ select{
 }
 .pago-qr .q h4{margin-bottom:10px;font-size:16px;font-weight:800;color:#111}
 .pago-qr .q .ph{
-  height:140px;display:flex;align-items:center;justify-content:center;
+  width:220px;height:220px;margin:0 auto;box-sizing:border-box;
+  display:flex;align-items:center;justify-content:center;
   background:#fff;border:2px dashed var(--grisb);border-radius:10px;
-  color:#ccc;font-size:13px;text-align:center;padding:12px;line-height:1.5;
+  color:#ccc;font-size:13px;text-align:center;padding:14px;line-height:1.5;
+  overflow:hidden;
+}
+.pago-qr .q .ph img{
+  width:100%;height:100%;object-fit:contain;
 }
 
 /* ================================================================
