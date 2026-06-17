@@ -125,10 +125,14 @@ function hideAccessOverlay(){
 /* ---------- Acceso a "Validar QR" ---------- */
 function checkValidadorSession(){
   const nombre=sessionStorage.getItem('validadorNombre');
-  if(nombre){
+  const clave=sessionStorage.getItem('validadorClave');
+  if(nombre && clave){
     document.getElementById('validarLogin').classList.add('hidden');
     document.getElementById('validarPanel').classList.remove('hidden');
     document.getElementById('validadorNombre').textContent=nombre;
+  } else if(nombre){
+    // Sesión de una versión anterior (sin código guardado): exige iniciar sesión otra vez.
+    sessionStorage.removeItem('validadorNombre');
   }
 }
 
@@ -140,6 +144,7 @@ async function loginValidador(){
   const {data:esAdmin}=await sb.rpc('verificar_admin',{p_admin_key:code});
   if(esAdmin){
     sessionStorage.setItem('validadorNombre','Administrador');
+    sessionStorage.setItem('validadorClave',code);
     checkValidadorSession();
     return;
   }
@@ -147,11 +152,13 @@ async function loginValidador(){
   const {data,error}=await sb.rpc('verificar_validador',{p_clave:code});
   if(error || !data?.valido){ msg('msgValidarLogin','Código incorrecto o inactivo. Pide uno nuevo al administrador.','err'); return; }
   sessionStorage.setItem('validadorNombre',data.nombre);
+  sessionStorage.setItem('validadorClave',code);
   checkValidadorSession();
 }
 
 function logoutValidador(){
   sessionStorage.removeItem('validadorNombre');
+  sessionStorage.removeItem('validadorClave');
   document.getElementById('validarLogin').classList.remove('hidden');
   document.getElementById('validarPanel').classList.add('hidden');
   document.getElementById('validarCodigo').value='';
@@ -214,7 +221,9 @@ function ingresar(){ registrarIngreso(document.getElementById('fCodigo').value.t
 function ingresarDirecto(){ registrarIngreso(ultimoCodigo); }
 async function registrarIngreso(code){
   if(!sb||!code) return;
-  const {data,error}=await sb.rpc('registrar_ingreso',{p_codigo:code});
+  const clave=sessionStorage.getItem('validadorClave');
+  if(!clave){ alert('Tu sesión expiró. Vuelve a iniciar sesión como validador.'); logoutValidador(); return; }
+  const {data,error}=await sb.rpc('registrar_ingreso',{p_codigo:code, p_clave:clave});
   if(error){ alert('Error: '+error.message); return; }
   const box=document.getElementById('scanResult'); box.className='scan-result show';
   document.getElementById('srIngresar').style.display='none';

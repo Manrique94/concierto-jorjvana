@@ -321,17 +321,9 @@ async function rechazar(id){
 async function eliminarCompra(id){
   if(!confirm('¿Eliminar esta compra? Esta acción no se puede deshacer.')) return;
   try{
-    const {data,error}=await sb.rpc('eliminar_compra',{p_comprador:id, p_admin_key:ADMIN_KEY});
+    // eliminar_compra() ya borra también el archivo del comprobante en Storage.
+    const {error}=await sb.rpc('eliminar_compra',{p_comprador:id, p_admin_key:ADMIN_KEY});
     if(error) throw error;
-    const res=unwrapRpc(data);
-    if(res?.comprobante_url){
-      const marker='/comprobantes/';
-      const idx=res.comprobante_url.indexOf(marker);
-      if(idx!==-1){
-        const path=decodeURIComponent(res.comprobante_url.slice(idx+marker.length));
-        await sb.storage.from('comprobantes').remove([path]);
-      }
-    }
     await loadAdmin();
   }catch(e){ alert('Error: '+e.message); }
 }
